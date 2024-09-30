@@ -1,0 +1,37 @@
+linters:
+  enable-all: true
+  disable:
+    # Deprecated linters
+    # TODO: watch for those to be removed from default golangci linters.
+    - exportloopref
+    - gomnd
+    - execinquery
+    # Rules we don't want to enforce
+    - funlen
+    - depguard
+    - gochecknoinits
+    - nlreturn
+    - nonamedreturns
+    - godox
+    - wsl
+    - zerologlint
+    - mnd
+    - gochecknoglobals
+    - ireturn
+    - exhaustruct
+    - forcetypeassert
+    - exhaustive
+
+linters-settings:
+  gci:
+    sections:
+      - standard # Standard section: captures all standard packages.
+      - default # Default section: contains all imports that could not be matched to another section type.
+      - prefix(github.com/a-novel/golib)
+    skip-generated: true
+
+issues:
+  exclude-dirs:
+    - mocks
+  exclude-files:
+    - ".*_test\\.go"

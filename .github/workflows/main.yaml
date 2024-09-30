@@ -1,0 +1,14 @@
+name: main
+
+on: [ push ]
+
+jobs:
+  prepare:
+    uses: a-novel/workflows/.github/workflows/prepare-go.yaml@master
+
+  test:
+    needs: [ prepare ]
+    uses: a-novel/workflows/.github/workflows/test-go.yaml@master
+    secrets:
+      codecov_token: ${{ secrets.CODECOV_TOKEN }}
+

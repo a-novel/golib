@@ -1,0 +1,20 @@
+with-expecter: true
+packages:
+  github.com/a-novel/golib/loggers/formatters:
+    config:
+      all: True
+      recursive: true
+      outpkg: formattersmocks
+      dir: loggers/formatters/mocks
+  github.com/a-novel/golib/loggers:
+    config:
+      all: True
+      recursive: true
+      outpkg: loggersmocks
+      dir: loggers/mocks
+  github.com/a-novel/golib/loggers/adapters:
+    config:
+      all: True
+      recursive: true
+      outpkg: adaptersmocks
+      dir: loggers/adapters/mocks
