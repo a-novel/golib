@@ -1,0 +1,6 @@
+{
+  "loadBalancingPolicy": "round_robin",
+  "healthCheckConfig": {
+    "serviceName": ""
+  }
+}
