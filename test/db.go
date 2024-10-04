@@ -33,14 +33,14 @@ func OpenDB(sqlMigrations embed.FS) *bun.DB {
 }
 
 func ClearDB(db *bun.DB) {
-	if _, err := db.ExecContext(context.TODO(), "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"); err != nil {
+	if _, err := db.ExecContext(context.Background(), "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"); err != nil {
 		panic(err)
 	}
 
-	if _, err := db.ExecContext(context.TODO(), "GRANT ALL ON SCHEMA public TO public;"); err != nil {
+	if _, err := db.ExecContext(context.Background(), "GRANT ALL ON SCHEMA public TO public;"); err != nil {
 		panic(err)
 	}
-	if _, err := db.ExecContext(context.TODO(), "GRANT ALL ON SCHEMA public TO test;"); err != nil {
+	if _, err := db.ExecContext(context.Background(), "GRANT ALL ON SCHEMA public TO test;"); err != nil {
 		panic(err)
 	}
 }
@@ -54,13 +54,13 @@ func CloseDB(db *bun.DB) {
 }
 
 func BeginTX[T any](db bun.IDB, fixtures []T) bun.Tx {
-	tx, err := db.BeginTx(context.TODO(), nil)
+	tx, err := db.BeginTx(context.Background(), nil)
 	if err != nil {
 		panic(err)
 	}
 
 	for _, fixture := range fixtures {
-		_, err := tx.NewInsert().Model(fixture).Exec(context.TODO())
+		_, err := tx.NewInsert().Model(fixture).Exec(context.Background())
 		if err != nil {
 			panic(err)
 		}
