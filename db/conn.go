@@ -1,4 +1,4 @@
-package anoveldeploy
+package anoveldb
 
 import (
 	"database/sql"

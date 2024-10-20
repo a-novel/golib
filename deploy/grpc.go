@@ -6,7 +6,8 @@ import (
 	"crypto/x509"
 	_ "embed"
 	"fmt"
-	anovelmonitor "github.com/a-novel/golib/monitor"
+	"github.com/a-novel/golib/logger"
+	"github.com/a-novel/golib/logger/formatters"
 	"github.com/samber/lo"
 	"google.golang.org/api/idtoken"
 	"google.golang.org/grpc"
@@ -35,7 +36,7 @@ type GRPCCallback[In any, Out any] func(ctx context.Context, in *In, opts ...grp
 //	defer deploy.CloseGRPCConn(conn)
 //
 // This method automatically handles authentication under GCP environments.
-func OpenGRPCConn(logger anovelmonitor.Logger, host string) *grpc.ClientConn {
+func OpenGRPCConn(host string, f formatters.Formatter) *grpc.ClientConn {
 	var opts []grpc.DialOption
 
 	if IsReleaseEnv() {
@@ -43,12 +44,12 @@ func OpenGRPCConn(logger anovelmonitor.Logger, host string) *grpc.ClientConn {
 		// Cloud environment.
 		systemRoots, err := x509.SystemCertPool()
 		if err != nil {
-			logger.FatalE(err, "failed to load system root CA certificates")
+			f.Log(formatters.NewLogError(err, "load system root CA certificates"), logger.LogLevelFatal)
 		}
 
 		tokenSource, err := idtoken.NewTokenSource(context.Background(), "https://"+host)
 		if err != nil {
-			logger.FatalE(err, "failed to create token source")
+			f.Log(formatters.NewLogError(err, "create token source"), logger.LogLevelFatal)
 		}
 
 		cred := credentials.NewTLS(&tls.Config{RootCAs: systemRoots})
@@ -66,12 +67,13 @@ func OpenGRPCConn(logger anovelmonitor.Logger, host string) *grpc.ClientConn {
 		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	}
 
-	opts = append(opts, grpc.WithDefaultServiceConfig(grpcConfig))
+	// TODO: uncomment when the app grows. This is temporarily deactivated because it drives GCP costs up.
+	//opts = append(opts, grpc.WithDefaultServiceConfig(grpcConfig))
 
 	// Open a connection to the service. This connection will remain alive the whole time the server is up.
 	conn, err := grpc.NewClient(host, opts...)
 	if err != nil {
-		logger.FatalE(err, "failed to connect to service")
+		f.Log(formatters.NewLogError(err, "connect to service"), logger.LogLevelFatal)
 	}
 
 	return conn
@@ -80,9 +82,9 @@ func OpenGRPCConn(logger anovelmonitor.Logger, host string) *grpc.ClientConn {
 // CloseGRPCConn closes an existing connection to a GRPC service.
 //
 // Must be called after opening a connection with OpenGRPCConn.
-func CloseGRPCConn(conn *grpc.ClientConn) {
+func CloseGRPCConn(conn *grpc.ClientConn, f formatters.Formatter) {
 	if err := conn.Close(); err != nil {
-		log.Fatal(err, "failed to close connection")
+		f.Log(formatters.NewLogError(err, "close connection"), logger.LogLevelFatal)
 	}
 }
 
@@ -114,7 +116,7 @@ type DepsCheck struct {
 //	defer deploy.CloseGRPCServer(listener, server)
 //	// (optional, but recommended) Start healthcheck.
 //	go health()
-func StartGRPCServer(logger anovelmonitor.Logger, port int, depsCheck DepsCheck) (net.Listener, *grpc.Server, func()) {
+func StartGRPCServer(port int, depsCheck DepsCheck, f formatters.Formatter) (net.Listener, *grpc.Server, func()) {
 	// Prevent accidental misconfigurations.
 	if port == 0 {
 		log.Fatal("port is required")
@@ -123,7 +125,7 @@ func StartGRPCServer(logger anovelmonitor.Logger, port int, depsCheck DepsCheck)
 	// Start to listen on the provided port.
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
-		logger.FatalE(err, "failed to listen")
+		f.Log(formatters.NewLogError(err, "listen"), logger.LogLevelFatal)
 	}
 
 	server := grpc.NewServer()
@@ -143,7 +145,7 @@ func StartGRPCServer(logger anovelmonitor.Logger, port int, depsCheck DepsCheck)
 		// This loop reports errors, and sets the global service health.
 		for dependency, err := range dependencies {
 			if err != nil {
-				logger.FatalE(err, fmt.Sprintf("dependency check for %s failed", dependency))
+				f.Log(formatters.NewLogError(err, fmt.Sprintf("dependency check for %s failed", dependency)), logger.LogLevelError)
 				global = false
 			}
 		}
