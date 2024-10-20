@@ -1,6 +1,6 @@
 module github.com/a-novel/golib
 
-go 1.23.1
+go 1.23.2
 
 require (
 	github.com/charmbracelet/bubbles v0.20.0
