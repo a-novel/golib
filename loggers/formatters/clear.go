@@ -15,7 +15,7 @@ type logClearImpl struct{}
 
 // RenderConsole implements LogContent.RenderConsole interface.
 func (logClear *logClearImpl) RenderConsole() string {
-	return ansi.EraseDisplay(2) + ansi.MoveCursorOrigin
+	return ansi.EraseDisplay(2) + ansi.CursorOrigin
 }
 
 // RenderJSON implements LogContent.RenderJSON interface.
