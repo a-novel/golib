@@ -9,6 +9,10 @@ import (
 )
 
 func TestOpenDB(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping database test in short mode.")
+	}
+
 	t.Run("OK", func(t *testing.T) {
 		dsn := "postgres://test:test@localhost:5432/test?sslmode=disable"
 

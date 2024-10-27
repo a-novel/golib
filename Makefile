@@ -11,6 +11,10 @@ format:
 		-s standard -s default \
 		-s "prefix(github.com/a-novel/golib)" \
 		.
+	go run mvdan.cc/gofumpt@latest -l -w .
 	go mod tidy
+
+regen-test-certs:
+	cd "$(CURDIR)/grpc/mocks/x509" && sh ./create.sh; cd "$(CURDIR)"
 
 PHONY: test lint format
