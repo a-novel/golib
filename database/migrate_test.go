@@ -19,6 +19,10 @@ import (
 )
 
 func TestMigrate(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping migrations test in short mode.")
+	}
+
 	initialColorProfile := termenv.ColorProfile()
 	lipgloss.SetColorProfile(termenv.Ascii)
 	defer func() {
