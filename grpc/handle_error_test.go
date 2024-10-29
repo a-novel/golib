@@ -2,6 +2,7 @@ package grpc_test
 
 import (
 	"errors"
+	"sync"
 	"testing"
 
 	"github.com/samber/lo"
@@ -199,5 +200,59 @@ func TestHandleError(t *testing.T) {
 			require.Equal(t, testCase.expectMessage, st.Message())
 			require.Equal(t, testCase.expectCode, st.Code())
 		})
+	}
+}
+
+func TestHandleErrorConcurrency(t *testing.T) {
+	var (
+		ErrA = errors.New("A")
+		ErrB = errors.New("B")
+	)
+
+	handler := grpc.HandleError(codes.Internal).
+		Is(ErrA, codes.InvalidArgument).
+		Is(ErrB, codes.NotFound)
+
+	errs := []error{
+		ErrA, ErrB,
+		ErrA, ErrB,
+		ErrA, ErrB,
+		ErrA, ErrB,
+		ErrA, ErrB,
+		ErrA, ErrB,
+		ErrA, ErrB,
+		ErrA, ErrB,
+		ErrA, ErrB,
+		ErrA, ErrB,
+	}
+
+	collectCodes := sync.Map{}
+
+	wg := new(sync.WaitGroup)
+
+	callHandler := func(err error, i int) {
+		handled := handler.Handle(err)
+		collectCodes.Store(i, status.Code(handled))
+		wg.Done()
+	}
+
+	for i, err := range errs {
+		wg.Add(1)
+		go callHandler(err, i)
+	}
+
+	wg.Wait()
+
+	for i, err := range errs {
+		code, ok := collectCodes.Load(i)
+		require.True(t, ok)
+
+		if errors.Is(err, ErrA) {
+			require.Equal(t, codes.InvalidArgument, code)
+		} else if errors.Is(err, ErrB) {
+			require.Equal(t, codes.NotFound, code)
+		} else {
+			require.Fail(t, "Unknown error")
+		}
 	}
 }
