@@ -1,6 +1,7 @@
 package formatters
 
 import (
+	"strings"
 	"sync"
 	"time"
 
@@ -53,8 +54,9 @@ type animatedLogContentImpl struct {
 // Trigger a repainting of the content.
 func (animatedLogContent *animatedLogContentImpl) exec() {
 	animatedLogContent.mu.Lock()
+	defer animatedLogContent.mu.Unlock()
+
 	lastRRendered := animatedLogContent.lastRendered
-	animatedLogContent.mu.Unlock()
 
 	// Check if the animated content can be updated.
 	shouldUpdateAnimation := time.Since(lastRRendered) > animatedLogContent.fps
@@ -68,34 +70,22 @@ func (animatedLogContent *animatedLogContentImpl) exec() {
 		}
 
 		// Update the last rendered time.
-		animatedLogContent.mu.Lock()
 		animatedLogContent.lastRendered = time.Now()
-		animatedLogContent.mu.Unlock()
 	}
 
 	// Get the new rendered value from the parent.
 	newRender := animatedLogContent.parentContent.RenderConsole()
 
-	// From now on, we enter the rendering process. We want to prevent concurrent renders.
-	animatedLogContent.mu.Lock()
-
 	// Don't do anything if the output has not changed.
 	if newRender == animatedLogContent.lastRenderedValue {
-		animatedLogContent.mu.Unlock()
 		return
 	}
 
 	animatedLogContent.lastRenderedValue = newRender
-
-	// Overwrite previous content.
-	for range lipgloss.Height(animatedLogContent.lastRenderedValue) {
-		newRender = EraseLineSequence + newRender
-	}
-
-	animatedLogContent.mu.Unlock()
+	eraser := strings.Repeat(EraseLineSequence, lipgloss.Height(animatedLogContent.lastRenderedValue))
 
 	// Send the new content to the renderer.
-	animatedLogContent.renderFn(newRender)
+	animatedLogContent.renderFn(eraser + newRender)
 }
 
 // The main goroutine used to render the animated content.

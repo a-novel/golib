@@ -49,9 +49,6 @@ type logLoaderImpl struct {
 
 // RenderConsole implements LogContent.RenderConsole interface.
 func (logLoader *logLoaderImpl) RenderConsole() string {
-	logLoader.mu.Lock()
-	defer logLoader.mu.Unlock()
-
 	// Compute the suffix of the message. If a child component is present, it will be rendered after the main message.
 	messageSuffix := "\n"
 	if logLoader.child != nil {
@@ -170,9 +167,7 @@ func NewLoader(description string, spinnerModel spinner.Spinner) LogLoader {
 	// Since LogDynamicContentPure requires a circular reference to its parent, we have to set it separately.
 	loader.LogDynamicContentPure = NewAnimated(loader, spinnerModel.FPS, func() {
 		newSpinner, _ := spinnerInstance.Update(spinnerInstance.Tick())
-		loader.mu.Lock()
 		*loader.spinner = newSpinner
-		loader.mu.Unlock()
 	})
 
 	return loader

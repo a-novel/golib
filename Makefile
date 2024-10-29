@@ -5,6 +5,7 @@ lint:
 	go run github.com/golangci/golangci-lint/cmd/golangci-lint@v1.61.0 run
 
 format:
+	go mod tidy
 	go fmt ./...
 	go run github.com/daixiang0/gci@latest write \
 		--skip-generated \
@@ -12,7 +13,6 @@ format:
 		-s "prefix(github.com/a-novel/golib)" \
 		.
 	go run mvdan.cc/gofumpt@latest -l -w .
-	go mod tidy
 
 regen-test-certs:
 	cd "$(CURDIR)/grpc/mocks/x509" && sh ./create.sh; cd "$(CURDIR)"
