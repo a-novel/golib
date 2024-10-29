@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"errors"
+	"sync"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -24,94 +25,121 @@ type ErrorHandler interface {
 type errorHandlerImpl struct {
 	cases       []func(err error) (error, bool)
 	defaultCode codes.Code
+
+	mu sync.RWMutex
 }
 
-func (e *errorHandlerImpl) Test(caseFn func(initialErr error) (err error, ok bool)) ErrorHandler {
-	e.cases = append(e.cases, caseFn)
-	return e
+func (errorHandler *errorHandlerImpl) Test(caseFn func(initialErr error) (err error, ok bool)) ErrorHandler {
+	errorHandler.mu.Lock()
+	defer errorHandler.mu.Unlock()
+
+	errorHandler.cases = append(errorHandler.cases, caseFn)
+	return errorHandler
 }
 
-func (e *errorHandlerImpl) Default(code codes.Code) ErrorHandler {
-	e.defaultCode = code
-	return e
-}
+func (errorHandler *errorHandlerImpl) Is(target error, code codes.Code) ErrorHandler {
+	errorHandler.mu.Lock()
+	defer errorHandler.mu.Unlock()
 
-func (e *errorHandlerImpl) Is(target error, code codes.Code) ErrorHandler {
-	e.cases = append(e.cases, func(err error) (error, bool) {
+	errorHandler.cases = append(errorHandler.cases, func(err error) (error, bool) {
 		if !errors.Is(err, target) {
 			return nil, false
 		}
 
 		return status.Errorf(code, "%s", err), true
 	})
-	return e
+	return errorHandler
 }
 
-func (e *errorHandlerImpl) IsW(target error, code codes.Code, wrap error) ErrorHandler {
-	e.cases = append(e.cases, func(err error) (error, bool) {
+func (errorHandler *errorHandlerImpl) IsW(target error, code codes.Code, wrap error) ErrorHandler {
+	errorHandler.mu.Lock()
+	defer errorHandler.mu.Unlock()
+
+	errorHandler.cases = append(errorHandler.cases, func(err error) (error, bool) {
 		if !errors.Is(err, target) {
 			return nil, false
 		}
 
 		return status.Errorf(code, "%s", errors.Join(wrap, err)), true
 	})
-	return e
+	return errorHandler
 }
 
-func (e *errorHandlerImpl) IsWF(target error, code codes.Code, format string, args ...interface{}) ErrorHandler {
-	e.cases = append(e.cases, func(err error) (error, bool) {
+func (errorHandler *errorHandlerImpl) IsWF(
+	target error, code codes.Code, format string, args ...interface{},
+) ErrorHandler {
+	errorHandler.mu.Lock()
+	defer errorHandler.mu.Unlock()
+
+	errorHandler.cases = append(errorHandler.cases, func(err error) (error, bool) {
 		if !errors.Is(err, target) {
 			return nil, false
 		}
 
 		return status.Errorf(code, format, args...), true
 	})
-	return e
+	return errorHandler
 }
 
-func (e *errorHandlerImpl) As(target interface{}, code codes.Code) ErrorHandler {
-	e.cases = append(e.cases, func(err error) (error, bool) {
+func (errorHandler *errorHandlerImpl) As(target interface{}, code codes.Code) ErrorHandler {
+	errorHandler.mu.Lock()
+	defer errorHandler.mu.Unlock()
+
+	errorHandler.cases = append(errorHandler.cases, func(err error) (error, bool) {
 		if !errors.As(err, target) {
 			return nil, false
 		}
 
 		return status.Errorf(code, "%s", err), true
 	})
-	return e
+	return errorHandler
 }
 
-func (e *errorHandlerImpl) AsW(target interface{}, code codes.Code, wrap error) ErrorHandler {
-	e.cases = append(e.cases, func(err error) (error, bool) {
+func (errorHandler *errorHandlerImpl) AsW(target interface{}, code codes.Code, wrap error) ErrorHandler {
+	errorHandler.mu.Lock()
+	defer errorHandler.mu.Unlock()
+
+	errorHandler.cases = append(errorHandler.cases, func(err error) (error, bool) {
 		if !errors.As(err, target) {
 			return nil, false
 		}
 
 		return status.Errorf(code, "%s", errors.Join(wrap, err)), true
 	})
-	return e
+	return errorHandler
 }
 
-func (e *errorHandlerImpl) AsWF(target interface{}, code codes.Code, format string, args ...interface{}) ErrorHandler {
-	e.cases = append(e.cases, func(err error) (error, bool) {
+func (errorHandler *errorHandlerImpl) AsWF(
+	target interface{}, code codes.Code, format string, args ...interface{},
+) ErrorHandler {
+	errorHandler.mu.Lock()
+	defer errorHandler.mu.Unlock()
+
+	errorHandler.cases = append(errorHandler.cases, func(err error) (error, bool) {
 		if !errors.As(err, target) {
 			return nil, false
 		}
 
 		return status.Errorf(code, format, args...), true
 	})
-	return e
+	return errorHandler
 }
 
-func (e *errorHandlerImpl) Handle(err error) error {
-	for _, caseFn := range e.cases {
+func (errorHandler *errorHandlerImpl) Handle(err error) error {
+	errorHandler.mu.RLock()
+	defer errorHandler.mu.RUnlock()
+
+	for _, caseFn := range errorHandler.cases {
 		if res, ok := caseFn(err); ok {
 			return res
 		}
 	}
 
-	return status.Errorf(e.defaultCode, "%s", err)
+	return status.Errorf(errorHandler.defaultCode, "%s", err)
 }
 
+// HandleError creates a new error handler. You can define different case depending on the error you want to handle.
+// This handler is thread safe, and a single handler can be shared between multiple goroutines.
 func HandleError(defaultCode codes.Code) ErrorHandler {
 	return &errorHandlerImpl{defaultCode: defaultCode}
 }
