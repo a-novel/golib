@@ -28,10 +28,10 @@ type stubServerParams struct {
 	token     *oauth2.Token
 }
 
-func setupStubServer(t *testing.T, params stubServerParams) *grpcmocks.StubServer {
+func setupClientStubServer(t *testing.T, params stubServerParams) *grpcmocks.StubServer {
 	t.Helper()
 
-	ss := &grpcmocks.StubServer{
+	return &grpcmocks.StubServer{
 		EmptyCallF: func(ctx context.Context, _ *testgrpc.Empty) (*testgrpc.Empty, error) {
 			pr, ok := peer.FromContext(ctx)
 			if !ok {
@@ -79,75 +79,55 @@ func setupStubServer(t *testing.T, params stubServerParams) *grpcmocks.StubServe
 			return new(testgrpc.Empty), nil
 		},
 	}
-
-	return ss
 }
 
 func TestConnDevOK(t *testing.T) {
-	// Run in isolation to avoid messing with flags.
-	testutils.RunCMD(t, &testutils.CMDConfig{
-		CmdFn: func(t *testing.T) {
-			anovelgrpc.SystemCertPool = grpcmocks.FakeClientCerts()
-			anovelgrpc.NewTokenSource = grpcmocks.FakeTokenSource(nil)
+	anovelgrpc.SystemCertPool = grpcmocks.FakeClientCerts()
+	anovelgrpc.NewTokenSource = grpcmocks.FakeTokenSource(nil)
 
-			ss := setupStubServer(t, stubServerParams{insecure: true})
-			clean, err := grpcmocks.FakeGRPCServer(ss, nil, nil)
-			require.NoError(t, err)
-			defer clean()
+	stubbedServer := setupClientStubServer(t, stubServerParams{insecure: true})
+	clean, err := grpcmocks.FakeGRPCServer(stubbedServer, nil, nil)
+	require.NoError(t, err)
+	defer clean()
 
-			connPool := anovelgrpc.NewConnPool()
-			defer connPool.Close()
+	connPool := anovelgrpc.NewConnPool()
+	defer connPool.Close()
 
-			client, err := connPool.Open("127.0.0.1", 8080, anovelgrpc.ProtocolHTTPS)
-			require.NoError(t, err)
+	conn, err := connPool.Open("127.0.0.1", 8080, anovelgrpc.ProtocolHTTPS)
+	require.NoError(t, err)
 
-			c := testgrpc.NewTestServiceClient(client)
-			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-			defer cancel()
+	client := testgrpc.NewTestServiceClient(conn)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 
-			_, err = c.EmptyCall(ctx, new(testgrpc.Empty))
-			testutils.RequireGRPCCodesEqual(t, err, codes.OK)
-		},
-		MainFn: func(t *testing.T, res *testutils.CMDResult) {
-			require.True(t, res.Success, res.STDErr, res.STDOut)
-		},
-		Env: []string{"ENV=dev"},
-	})
+	_, err = client.EmptyCall(ctx, new(testgrpc.Empty))
+	testutils.RequireGRPCCodesEqual(t, err, codes.OK)
 }
 
 func TestConnDevErrorSecureServer(t *testing.T) {
-	// Run in isolation to avoid messing with flags.
-	testutils.RunCMD(t, &testutils.CMDConfig{
-		CmdFn: func(t *testing.T) {
-			anovelgrpc.SystemCertPool = grpcmocks.FakeClientCerts(x509mocks.ServerCACertPEM)
-			anovelgrpc.NewTokenSource = grpcmocks.FakeTokenSource(new(grpcmocks.IDTokenStub))
+	anovelgrpc.SystemCertPool = grpcmocks.FakeClientCerts(x509mocks.ServerCACertPEM)
+	anovelgrpc.NewTokenSource = grpcmocks.FakeTokenSource(new(grpcmocks.IDTokenStub))
 
-			ss := setupStubServer(
-				t,
-				stubServerParams{insecure: false, authority: "127.0.0.1:8080", token: grpcmocks.DefaultToken},
-			)
-			clean, err := grpcmocks.FakeGRPCServer(ss, x509mocks.Server1KeyPEM, x509mocks.Server1CertPEM)
-			require.NoError(t, err)
-			defer clean()
+	stubbedServer := setupClientStubServer(
+		t,
+		stubServerParams{insecure: false, authority: "127.0.0.1:8080", token: grpcmocks.DefaultToken},
+	)
+	clean, err := grpcmocks.FakeGRPCServer(stubbedServer, x509mocks.Server1KeyPEM, x509mocks.Server1CertPEM)
+	require.NoError(t, err)
+	defer clean()
 
-			connPool := anovelgrpc.NewConnPool()
-			defer connPool.Close()
+	connPool := anovelgrpc.NewConnPool()
+	defer connPool.Close()
 
-			client, err := connPool.Open("127.0.0.1", 8080, anovelgrpc.ProtocolHTTPS)
-			require.NoError(t, err)
+	conn, err := connPool.Open("127.0.0.1", 8080, anovelgrpc.ProtocolHTTPS)
+	require.NoError(t, err)
 
-			c := testgrpc.NewTestServiceClient(client)
-			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-			defer cancel()
+	client := testgrpc.NewTestServiceClient(conn)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 
-			_, err = c.EmptyCall(ctx, new(testgrpc.Empty))
-			require.Error(t, err)
-		},
-		MainFn: func(t *testing.T, res *testutils.CMDResult) {
-			require.True(t, res.Success, res.STDErr, res.STDOut)
-		},
-		Env: []string{"ENV=dev"},
-	})
+	_, err = client.EmptyCall(ctx, new(testgrpc.Empty))
+	require.Error(t, err)
 }
 
 func TestConnReleaseOK(t *testing.T) {
@@ -157,25 +137,25 @@ func TestConnReleaseOK(t *testing.T) {
 			anovelgrpc.SystemCertPool = grpcmocks.FakeClientCerts(x509mocks.ServerCACertPEM)
 			anovelgrpc.NewTokenSource = grpcmocks.FakeTokenSource(new(grpcmocks.IDTokenStub))
 
-			ss := setupStubServer(
+			stubbedServer := setupClientStubServer(
 				t,
 				stubServerParams{insecure: false, authority: "127.0.0.1:8080", token: grpcmocks.DefaultToken},
 			)
-			clean, err := grpcmocks.FakeGRPCServer(ss, x509mocks.Server1KeyPEM, x509mocks.Server1CertPEM)
+			clean, err := grpcmocks.FakeGRPCServer(stubbedServer, x509mocks.Server1KeyPEM, x509mocks.Server1CertPEM)
 			require.NoError(t, err)
 			defer clean()
 
 			connPool := anovelgrpc.NewConnPool()
 			defer connPool.Close()
 
-			client, err := connPool.Open("127.0.0.1", 8080, anovelgrpc.ProtocolHTTPS)
+			conn, err := connPool.Open("127.0.0.1", 8080, anovelgrpc.ProtocolHTTPS)
 			require.NoError(t, err)
 
-			c := testgrpc.NewTestServiceClient(client)
+			client := testgrpc.NewTestServiceClient(conn)
 			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 			defer cancel()
 
-			_, err = c.EmptyCall(ctx, new(testgrpc.Empty))
+			_, err = client.EmptyCall(ctx, new(testgrpc.Empty))
 			testutils.RequireGRPCCodesEqual(t, err, codes.OK)
 		},
 		MainFn: func(t *testing.T, res *testutils.CMDResult) {
@@ -183,4 +163,51 @@ func TestConnReleaseOK(t *testing.T) {
 		},
 		Env: []string{"ENV=staging"},
 	})
+}
+
+func TestCloseConn(t *testing.T) {
+	anovelgrpc.SystemCertPool = grpcmocks.FakeClientCerts()
+	anovelgrpc.NewTokenSource = grpcmocks.FakeTokenSource(nil)
+
+	stubbedServer := setupClientStubServer(t, stubServerParams{insecure: true})
+	clean, err := grpcmocks.FakeGRPCServer(stubbedServer, nil, nil)
+	require.NoError(t, err)
+	defer clean()
+
+	connPool := anovelgrpc.NewConnPool()
+	defer connPool.Close()
+
+	conn, err := connPool.Open("127.0.0.1", 8080, anovelgrpc.ProtocolHTTPS)
+	require.NoError(t, err)
+
+	client := testgrpc.NewTestServiceClient(conn)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	_, err = client.EmptyCall(ctx, new(testgrpc.Empty))
+	testutils.RequireGRPCCodesEqual(t, err, codes.OK)
+
+	connPool.Close()
+
+	_, err = client.EmptyCall(ctx, new(testgrpc.Empty))
+	require.Error(t, err)
+
+	// Closing multiple times should not cause any issue.
+	connPool.Close()
+}
+
+func TestOpenClosedPool(t *testing.T) {
+	anovelgrpc.SystemCertPool = grpcmocks.FakeClientCerts(x509mocks.ServerCACertPEM)
+	anovelgrpc.NewTokenSource = grpcmocks.FakeTokenSource(new(grpcmocks.IDTokenStub))
+
+	stubbedClient := setupClientStubServer(t, stubServerParams{insecure: true})
+	clean, err := grpcmocks.FakeGRPCServer(stubbedClient, x509mocks.Server1KeyPEM, x509mocks.Server1CertPEM)
+	require.NoError(t, err)
+	defer clean()
+
+	connPool := anovelgrpc.NewConnPool()
+	connPool.Close()
+
+	_, err = connPool.Open("127.0.0.1", 8080, anovelgrpc.ProtocolHTTPS)
+	require.ErrorIs(t, err, anovelgrpc.ErrConnectionPoolClosed)
 }

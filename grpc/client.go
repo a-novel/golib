@@ -42,7 +42,7 @@ var SystemCertPool = x509.SystemCertPool
 var NewTokenSource = idtoken.NewTokenSource
 
 // ConnPool manages client connections to GRPC services. It is thread-safe, and should be shared for opening
-// connections to the same service.
+// connections to different services.
 type ConnPool interface {
 	// Close terminates all connections in the pool. Use this method for graceful shutdowns.
 	Close()
@@ -63,6 +63,7 @@ type connPoolImpl struct {
 
 // Make sure the pool is properly initialized when used.
 func (pool *connPoolImpl) ensureInit() error {
+	// Load certificates from environment, if available.
 	if pool.certs == nil {
 		certs, err := SystemCertPool()
 		if err != nil {
@@ -79,10 +80,12 @@ func (pool *connPoolImpl) Close() {
 	pool.mu.Lock()
 	defer pool.mu.Unlock()
 
+	// No-op if already closed.
 	if pool.closed {
 		return
 	}
 
+	// Close all connections.
 	for _, conn := range pool.conns {
 		_ = conn.Close()
 	}
@@ -93,28 +96,44 @@ func (pool *connPoolImpl) Close() {
 func (pool *connPoolImpl) getConnOptions(host string, port int, protocol Protocol) ([]grpc.DialOption, error) {
 	pool.mu.Lock()
 	defer pool.mu.Unlock()
+	// Following configuration comes from official documentation.
+	// https://cloud.google.com/run/docs/triggering/grpc?hl=fr
 
+	// host should be of the form domain:port, e.g., example.com:443
+	hostWithPort := fmt.Sprintf("%s:%d", host, port)
+	// audience must be the auto-assigned URL of a Cloud Run service or HTTP Cloud Function without port number.
+	audience := protocol.WithAddr(host)
+
+	opts := []grpc.DialOption{grpc.WithAuthority(hostWithPort)}
+
+	// Ignore authentication in non-release environments.
 	if !deploy.IsReleaseEnv() {
-		return []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}, nil
+		return append(opts, grpc.WithTransportCredentials(insecure.NewCredentials())), nil
 	}
 
-	tokenSource, err := NewTokenSource(context.Background(), protocol.WithAddr(host))
+	// Instead of declaring a token source per request, use a global one. It has the benefit of
+	// re-using and auto-refreshing tokens.
+	tokenSource, err := NewTokenSource(context.Background(), audience)
 	if err != nil {
 		return nil, fmt.Errorf("create token source: %w", err)
 	}
 
-	transport := credentials.NewClientTLSFromCert(pool.certs, fmt.Sprintf("%s:%d", host, port))
+	// Basically the same thing as the docs, but allows us to override the trusted CA check when running
+	// in tests.
+	transport := credentials.NewClientTLSFromCert(pool.certs, hostWithPort)
 
 	// Configure GRPC requests to be automatically authenticated, so Cloud credentials don't have to be
 	// managed manually.
-	return []grpc.DialOption{
+	return append(
+		opts,
 		grpc.WithTransportCredentials(transport),
-		grpc.WithAuthority(fmt.Sprintf("%s:%d", host, port)),
+		// Automate the step that adds the bearer token to the context of a request.
 		grpc.WithPerRPCCredentials(oauth.TokenSource{TokenSource: tokenSource}),
-	}, nil
+	), nil
 }
 
 func (pool *connPoolImpl) Open(host string, port int, protocol Protocol) (*grpc.ClientConn, error) {
+	// Ensure the pool has not been closed before trying anything.
 	pool.mu.Lock()
 	if pool.closed {
 		pool.mu.Unlock()
@@ -122,6 +141,7 @@ func (pool *connPoolImpl) Open(host string, port int, protocol Protocol) (*grpc.
 	}
 	pool.mu.Unlock()
 
+	// Make sure the pool is properly loaded. This settles the environment the first time it is called.
 	if err := pool.ensureInit(); err != nil {
 		return nil, fmt.Errorf("initialize connection pool: %w", err)
 	}
@@ -139,6 +159,7 @@ func (pool *connPoolImpl) Open(host string, port int, protocol Protocol) (*grpc.
 		return nil, fmt.Errorf("open connection: %w", err)
 	}
 
+	// Append the new connection to the current pool.
 	pool.mu.Lock()
 	pool.conns = append(pool.conns, conn)
 	pool.mu.Unlock()
