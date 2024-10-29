@@ -16,13 +16,10 @@ import (
 type dummyDynamicRenderer struct {
 	// Each time a new render is performed, the message is appended to this slice.
 	calls []string
-	mu    sync.Mutex
 }
 
 // The main render method, just capture the rendered message into the calls slice.
 func (d *dummyDynamicRenderer) renderer(msg string) {
-	d.mu.Lock()
-	defer d.mu.Unlock()
 	d.calls = append(d.calls, msg)
 }
 
@@ -37,16 +34,11 @@ type dummyDynamicLogContent struct {
 	formatters.LogDynamicContentPure
 	// Updates tracker.
 	updatedTimes int
-
-	// Dynamic content should be thread safe.
-	mu sync.Mutex
 }
 
 // Increment the update tracker.
 func (l *dummyDynamicLogContent) update() {
-	l.mu.Lock()
 	l.updatedTimes++
-	l.mu.Unlock()
 }
 
 func (l *dummyDynamicLogContent) RenderConsole() string {
@@ -221,6 +213,7 @@ func TestLogAnimated(t *testing.T) {
 		requireDynamicLogContentRenders(t, renderer, 1)
 		requireDynamicLogContent(t, content, 1)
 
+		require.Len(t, concurrentRenderer.getCalls(), 10)
 		for i := 0; i < 10; i++ {
 			require.Equal(t, "Updated 1 times", concurrentRenderer.getCalls()[i])
 		}
@@ -262,9 +255,5 @@ func TestLogAnimated(t *testing.T) {
 
 		requireDynamicLogContentRenders(t, renderer, 1)
 		requireDynamicLogContent(t, content, 1)
-
-		for i := 0; i < 10; i++ {
-			require.Equal(t, "Updated 1 times", concurrentRenderer.getCalls()[i])
-		}
 	})
 }
