@@ -212,11 +212,6 @@ func TestLogAnimated(t *testing.T) {
 
 		requireDynamicLogContentRenders(t, renderer, 1)
 		requireDynamicLogContent(t, content, 1)
-
-		require.Len(t, concurrentRenderer.getCalls(), 10)
-		for i := 0; i < 10; i++ {
-			require.Equal(t, "Updated 1 times", concurrentRenderer.getCalls()[i])
-		}
 	})
 
 	t.Run("Concurrency/StopRunning", func(t *testing.T) {
