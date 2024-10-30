@@ -43,18 +43,11 @@ make test
 As long as those commands succeed, and your code is properly covered, then you are guaranteed to have your code
 merged. Those commands are your new Ctrl+S. Learn to love them.
 
-### Commits
-
-https://www.conventionalcommits.org/en/v1.0.0/
-
-I didn't read all this shit, but so far it looks good (close enough to how we commit). Maybe we'll end up learning
-more from this resource.
-
 ### Comment, comment, comment
 
-Your audience (maintainers) have the maturity of 8yo. Add doc to every interface or function, with explaination
-about what it does and how to use it. Morever, if you write some complex logic somewhere, explain. No one should
-ever need to ask you about a piece of code, ever.
+Your audience (maintainers) have the maturity of 8yo. Add documentation to every interface or function, with 
+explaination about what it does and how to use it. Morever, if you write some complex logic somewhere, explain. No one 
+should ever need to ask you about a piece of code, ever.
 
 ### Write. Actual. Names.
 

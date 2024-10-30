@@ -16,9 +16,8 @@ rules in this document. However, we do not guarantee response time. Nor do we gu
 
 ## Speak your mind, as long as it is relevant
 
-Rant, swear, state your opinions as much as you want (f** the easily offended). 
-However, please keep in mind this is a code project. Discuss only code-relevant issues, your opinion about furries or
-politics is not welcomed here.
+Rant, swear, state your opinions as much as you want. 
+However, please keep in mind this is a code project. Discuss only code-relevant issues.
 
 ## Provide solutions
 
