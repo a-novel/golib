@@ -4,7 +4,7 @@ go 1.23.2
 
 require (
 	github.com/charmbracelet/bubbles v0.20.0
-	github.com/charmbracelet/lipgloss v0.13.1
+	github.com/charmbracelet/lipgloss v1.0.0
 	github.com/charmbracelet/x/ansi v0.4.2
 	github.com/gin-gonic/gin v1.10.0
 	github.com/goccy/go-yaml v1.13.1
