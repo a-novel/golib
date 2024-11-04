@@ -151,11 +151,11 @@ func NewGRPC(formatter formatters.Formatter) GRPC {
 	return &grpcImpl{formatter}
 }
 
-type GrpcCallback[In any, Out any] func(ctx context.Context, in In) (Out, error)
+type GRPCCallback[In any, Out any] func(ctx context.Context, in In) (Out, error)
 
-// WrapGRPCCall wraps a GrpcCallback callback with a GRPC logger. It also adds extra reporting that are not available
+// WrapGRPCCall wraps a GRPCCallback callback with a GRPC logger. It also adds extra reporting that are not available
 // to the base class, such as latency info.
-func WrapGRPCCall[In any, Out any](service string, logger GRPC, callback GrpcCallback[In, Out]) GrpcCallback[In, Out] {
+func WrapGRPCCall[In any, Out any](service string, logger GRPC, callback GRPCCallback[In, Out]) GRPCCallback[In, Out] {
 	return func(ctx context.Context, in In) (Out, error) {
 		start := time.Now()
 		out, err := callback(ctx, in)

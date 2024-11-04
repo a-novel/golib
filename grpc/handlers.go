@@ -11,7 +11,7 @@ type ExecService[In any, Out any] interface {
 }
 
 type wrappedService[In any, Out any] struct {
-	service adapters.GrpcCallback[In, Out]
+	service adapters.GRPCCallback[In, Out]
 }
 
 func (s *wrappedService[In, Out]) Exec(ctx context.Context, data In) (Out, error) {
