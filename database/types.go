@@ -1,8 +1,6 @@
 package database
 
 import (
-	"reflect"
-
 	"github.com/go-playground/validator/v10"
 )
 
@@ -16,16 +14,33 @@ const (
 	SortDirectionDesc SortDirection = "desc"
 )
 
-func registerSortDirectionType(field reflect.Value) interface{} {
-	value, ok := field.Interface().(SortDirection)
-	if !ok {
-		return nil
-	}
+// ValidateEnum creates a custom validation for go-validator. It checks if the value is part of the enum.
+//
+// TODO: look for custom errors in v11: https://github.com/go-playground/validator/issues/669
+func ValidateEnum[T comparable](list ...T) func(fl validator.FieldLevel) bool {
+	return func(fl validator.FieldLevel) bool {
+		value, ok := fl.Field().Interface().(T)
+		if !ok {
+			return false
+		}
 
-	return string(value)
+		for _, element := range list {
+			if value == element {
+				return true
+			}
+		}
+
+		return false
+	}
 }
 
 // RegisterSortDirection registers the SortDirection type with a validator.
-func RegisterSortDirection(validator *validator.Validate) {
-	validator.RegisterCustomTypeFunc(registerSortDirectionType, SortDirection(""))
+func RegisterSortDirection(customValidator *validator.Validate) {
+	err := customValidator.RegisterValidation(
+		"sort_direction",
+		ValidateEnum(SortDirectionNone, SortDirectionAsc, SortDirectionDesc),
+	)
+	if err != nil {
+		panic(err)
+	}
 }
