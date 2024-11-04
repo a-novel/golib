@@ -48,7 +48,7 @@ func TestSortDirection(t *testing.T) {
 				database.RegisterSortDirection(customValidator)
 
 				toValidate := struct {
-					Value database.SortDirection `validate:"omitempty,oneof=asc desc"`
+					Value database.SortDirection `validate:"omitempty,sort_direction"`
 				}{
 					Value: testCase.value,
 				}
@@ -68,13 +68,13 @@ func TestSortDirection(t *testing.T) {
 			database.RegisterSortDirection(customValidator)
 
 			toValidate := struct {
-				Value interface{} `validate:"omitempty,oneof=asc desc"`
+				Value interface{} `validate:"omitempty,sort_direction"`
 			}{
 				Value: "asc",
 			}
 
 			err := customValidator.Struct(toValidate)
-			require.NoError(t, err)
+			require.Error(t, err)
 		})
 	})
 }

@@ -8,7 +8,7 @@ require (
 	github.com/charmbracelet/x/ansi v0.4.2
 	github.com/gin-gonic/gin v1.10.0
 	github.com/go-playground/validator/v10 v10.22.1
-	github.com/goccy/go-yaml v1.13.2
+	github.com/goccy/go-yaml v1.13.4
 	github.com/google/go-cmp v0.6.0
 	github.com/google/uuid v1.6.0
 	github.com/muesli/termenv v0.15.2
