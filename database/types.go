@@ -34,13 +34,20 @@ func ValidateEnum[T comparable](list ...T) func(fl validator.FieldLevel) bool {
 	}
 }
 
-// RegisterSortDirection registers the SortDirection type with a validator.
-func RegisterSortDirection(customValidator *validator.Validate) {
-	err := customValidator.RegisterValidation(
-		"sort_direction",
-		ValidateEnum(SortDirectionNone, SortDirectionAsc, SortDirectionDesc),
-	)
+func MustRegisterValidation(
+	customValidator *validator.Validate, name string, validationFn func(fl validator.FieldLevel) bool,
+) {
+	err := customValidator.RegisterValidation(name, validationFn)
 	if err != nil {
 		panic(err)
 	}
+}
+
+// RegisterSortDirection registers the SortDirection type with a validator.
+func RegisterSortDirection(customValidator *validator.Validate) {
+	MustRegisterValidation(
+		customValidator,
+		"sort_direction",
+		ValidateEnum(SortDirectionNone, SortDirectionAsc, SortDirectionDesc),
+	)
 }
