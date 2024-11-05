@@ -15,6 +15,6 @@ func TestClear(t *testing.T) {
 
 	content := formatters.NewClear()
 
-	require.Equal(t, ansi.EraseDisplay(2)+ansi.CursorOrigin, content.RenderConsole())
+	require.Equal(t, ansi.EraseDisplay(2)+ansi.HomeCursorPosition, content.RenderConsole())
 	require.Nil(t, content.RenderJSON())
 }

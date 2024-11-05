@@ -53,7 +53,7 @@ func TestMigrate(t *testing.T) {
 		require.NoError(t, database.Migrate(db, databasemocks.MigrationsAll, formatter))
 
 		expectConsole := []interface{}{
-			"\x1b[2J\x1b[1;1H",
+			"\x1b[2J\x1b[H",
 			regexp.MustCompile("^▱▱▱ discovering migrations\\.\\.\\. .+\n$"),
 			regexp.MustCompile("^▱▱▱ migrations successfully discovered, applying migrations\\.\\.\\. .+\n$"),
 			regexp.MustCompile(
@@ -127,7 +127,7 @@ func TestMigrate(t *testing.T) {
 		require.NoError(t, database.Migrate(db, databasemocks.MigrationsAll, formatter))
 
 		expectConsole := []interface{}{
-			"\x1b[2J\x1b[1;1H",
+			"\x1b[2J\x1b[H",
 			regexp.MustCompile("^▱▱▱ discovering migrations\\.\\.\\. .+\n$"),
 			regexp.MustCompile("^▱▱▱ migrations successfully discovered, applying migrations\\.\\.\\. .+\n$"),
 			regexp.MustCompile(
@@ -201,7 +201,7 @@ func TestMigrate(t *testing.T) {
 		require.NoError(t, database.Migrate(db, databasemocks.MigrationsAll, formatter))
 
 		expectConsole := []interface{}{
-			"\x1b[2J\x1b[1;1H",
+			"\x1b[2J\x1b[H",
 			regexp.MustCompile("^▱▱▱ discovering migrations\\.\\.\\. .+\n$"),
 			regexp.MustCompile("^▱▱▱ migrations successfully discovered, applying migrations\\.\\.\\. .+\n$"),
 			regexp.MustCompile(
