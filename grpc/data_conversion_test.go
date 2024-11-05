@@ -7,6 +7,8 @@ import (
 	commonv1 "buf.build/gen/go/a-novel/proto/protocolbuffers/go/common/v1"
 	"github.com/samber/lo"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/types/known/durationpb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/a-novel/golib/database"
 	"github.com/a-novel/golib/grpc"
@@ -15,10 +17,64 @@ import (
 func TestTimestampOptional(t *testing.T) {
 	timestamp := grpc.TimestampOptional(lo.ToPtr(time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC)))
 	require.NotNil(t, timestamp)
-	require.Equal(t, int64(1609459200), timestamp.AsTime().Unix())
+	require.Equal(t, time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC), timestamp.AsTime())
 
 	timestamp = grpc.TimestampOptional(nil)
 	require.Nil(t, timestamp)
+}
+
+func TestTimestampOptionalProto(t *testing.T) {
+	timestamp := grpc.TimestampOptionalProto(timestamppb.New(time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC)))
+	require.NotNil(t, timestamp)
+	require.Equal(t, time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC), *timestamp)
+
+	timestamp = grpc.TimestampOptionalProto(nil)
+	require.Nil(t, timestamp)
+}
+
+func TestDurationOptional(t *testing.T) {
+	duration := grpc.DurationOptional(lo.ToPtr(5 * time.Second))
+	require.NotNil(t, duration)
+	require.Equal(t, 5*time.Second, duration.AsDuration())
+
+	duration = grpc.DurationOptional(nil)
+	require.Nil(t, duration)
+}
+
+func TestDurationOptionalProto(t *testing.T) {
+	duration := grpc.DurationOptionalProto(durationpb.New(5 * time.Second))
+	require.NotNil(t, duration)
+	require.Equal(t, 5*time.Second, *duration)
+
+	duration = grpc.DurationOptionalProto(nil)
+	require.Nil(t, duration)
+}
+
+func TestStructOptional(t *testing.T) {
+	structure, err := grpc.StructOptional(map[string]interface{}{
+		"key": "value",
+	})
+	require.Nil(t, err)
+	require.NotNil(t, structure)
+	require.Equal(t, "value", structure.Fields["key"].GetStringValue())
+
+	structure, err = grpc.StructOptional(nil)
+	require.Nil(t, err)
+	require.Nil(t, structure)
+}
+
+func TestStructOptionalProto(t *testing.T) {
+	initial, err := grpc.StructOptional(map[string]interface{}{
+		"key": "value",
+	})
+	require.Nil(t, err)
+
+	structure := grpc.StructOptionalProto(initial)
+	require.NotNil(t, structure)
+	require.Equal(t, "value", structure["key"])
+
+	structure = grpc.StructOptionalProto(nil)
+	require.Nil(t, structure)
 }
 
 func TestProtoConverterFromProto(t *testing.T) {
