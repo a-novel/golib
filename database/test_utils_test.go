@@ -2,10 +2,12 @@ package database_test
 
 import (
 	"context"
-	"github.com/a-novel/golib/database"
-	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/require"
+
+	"github.com/a-novel/golib/database"
 )
 
 func TestFreezeTime(t *testing.T) {
