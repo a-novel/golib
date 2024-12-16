@@ -3,7 +3,7 @@ module github.com/a-novel/golib
 go 1.23.2
 
 require (
-	buf.build/gen/go/a-novel/proto/protocolbuffers/go v1.35.1-20241105100003-97b1ea2903af.1
+	buf.build/gen/go/a-novel/proto/protocolbuffers/go v1.36.0-20241106125510-8cbf6983c821.1
 	github.com/charmbracelet/bubbles v0.20.0
 	github.com/charmbracelet/lipgloss v1.0.0
 	github.com/charmbracelet/x/ansi v0.4.5
@@ -23,7 +23,7 @@ require (
 	golang.org/x/oauth2 v0.23.0
 	google.golang.org/api v0.204.0
 	google.golang.org/grpc v1.67.1
-	google.golang.org/protobuf v1.35.1
+	google.golang.org/protobuf v1.36.0
 )
 
 require (
