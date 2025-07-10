@@ -1,6 +1,7 @@
 package postgrespresets
 
 import (
+	"context"
 	"github.com/uptrace/bun"
 )
 
@@ -16,6 +17,6 @@ func (config PassthroughConfig) DB() (*bun.DB, error) {
 	return config.db, nil
 }
 
-func (config PassthroughConfig) RunMigrations(_ bun.IDB) error {
+func (config PassthroughConfig) RunMigrations(_ context.Context, _ *bun.DB) error {
 	return nil
 }
