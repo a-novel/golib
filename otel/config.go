@@ -17,6 +17,7 @@ type Config interface {
 	GetPropagators() (propagation.TextMapPropagator, error)
 	GetTraceProvider() (trace.TracerProvider, error)
 	GetLogger() (log.LoggerProvider, error)
+	Flush()
 }
 
 func SetAppName(name string) {

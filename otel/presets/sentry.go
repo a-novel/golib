@@ -3,6 +3,7 @@ package otelpresets
 import (
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/getsentry/sentry-go"
 	sentryotel "github.com/getsentry/sentry-go/otel"
@@ -15,11 +16,12 @@ import (
 )
 
 type SentryOtelConfig struct {
-	DSN         string `json:"dsn"         yaml:"dsn"`
-	ServerName  string `json:"serverName"  yaml:"serverName"`
-	Release     string `json:"release"     yaml:"release"`
-	Environment string `json:"environment" yaml:"environment"`
-	Debug       bool   `json:"debug"       yaml:"debug"`
+	DSN          string        `json:"dsn"          yaml:"dsn"`
+	ServerName   string        `json:"serverName"   yaml:"serverName"`
+	Release      string        `json:"release"      yaml:"release"`
+	Environment  string        `json:"environment"  yaml:"environment"`
+	FlushTimeout time.Duration `json:"flushTimeout" yaml:"flushTimeout"`
+	Debug        bool          `json:"debug"        yaml:"debug"`
 }
 
 func (config *SentryOtelConfig) Init() error {
@@ -66,4 +68,8 @@ func (config *SentryOtelConfig) GetLogger() (log.LoggerProvider, error) {
 	return sdklog.NewLoggerProvider(
 		sdklog.WithProcessor(sdklog.NewBatchProcessor(logExporter)),
 	), nil
+}
+
+func (config *SentryOtelConfig) Flush() {
+	sentry.Flush(config.FlushTimeout)
 }
