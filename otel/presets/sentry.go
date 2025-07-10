@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/getsentry/sentry-go"
+	sentryhttp "github.com/getsentry/sentry-go/http"
 	sentryotel "github.com/getsentry/sentry-go/otel"
 	"go.opentelemetry.io/otel/exporters/stdout/stdoutlog"
 	"go.opentelemetry.io/otel/log"
@@ -72,4 +73,10 @@ func (config *SentryOtelConfig) GetLogger() (log.LoggerProvider, error) {
 
 func (config *SentryOtelConfig) Flush() {
 	sentry.Flush(config.FlushTimeout)
+}
+
+func (config *SentryOtelConfig) HTTPHandler() func(http.Handler) http.Handler {
+	sentryHandler := sentryhttp.New(sentryhttp.Options{})
+
+	return sentryHandler.Handle
 }

@@ -2,6 +2,7 @@ package otel
 
 import (
 	"fmt"
+	"net/http"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/log"
@@ -18,6 +19,7 @@ type Config interface {
 	GetTraceProvider() (trace.TracerProvider, error)
 	GetLogger() (log.LoggerProvider, error)
 	Flush()
+	HTTPHandler() func(http.Handler) http.Handler
 }
 
 func SetAppName(name string) {
