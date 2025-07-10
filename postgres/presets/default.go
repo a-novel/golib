@@ -21,6 +21,10 @@ func (config DefaultConfig) SQLDB() (*sql.DB, error) {
 }
 
 func (config DefaultConfig) RunMigrations(ctx context.Context, client *bun.DB) error {
+	if config.Migrations == nil {
+		return nil
+	}
+
 	mig := migrate.NewMigrations()
 
 	err := mig.Discover(config.Migrations)
