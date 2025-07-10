@@ -1,0 +1,12 @@
+# Check code quality.
+lint:
+	go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.2.1 run
+	npx prettier . --check
+	sqlfluff lint
+
+# Reformat code so it passes the code style lint checks.
+format:
+	go mod tidy
+	go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.2.1 run --fix
+	npx prettier . --write
+	sqlfluff fix
