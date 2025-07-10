@@ -14,6 +14,7 @@ import (
 type Config interface {
 	DB() (*bun.DB, error)
 	RunMigrations(ctx context.Context, client *bun.DB) error
+	Flush(client *bun.DB)
 }
 
 type ContextKey struct{}
@@ -58,7 +59,7 @@ func InitPostgres(ctx context.Context, config Config) (context.Context, error) {
 	ctxPG := context.WithValue(ctx, ContextKey{}, bun.IDB(client))
 	// Close clients on context termination.
 	context.AfterFunc(ctxPG, func() {
-		_ = client.Close()
+		config.Flush(client)
 	})
 
 	return otel.ReportSuccess(span, ctxPG), nil

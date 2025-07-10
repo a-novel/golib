@@ -21,3 +21,8 @@ func (config PassthroughConfig) DB() (*bun.DB, error) {
 func (config PassthroughConfig) RunMigrations(_ context.Context, _ *bun.DB) error {
 	return nil
 }
+
+func (config PassthroughConfig) Flush(_ *bun.DB) {
+	// No-op for passthrough config
+	// as it does not manage the lifecycle of the database connection.
+}

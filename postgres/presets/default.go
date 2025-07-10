@@ -49,3 +49,7 @@ func (config DefaultConfig) RunMigrations(ctx context.Context, client *bun.DB) e
 
 	return nil
 }
+
+func (config DefaultConfig) Flush(client *bun.DB) {
+	_ = client.Close()
+}
