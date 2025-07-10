@@ -2,19 +2,17 @@ package postgres
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"time"
 
 	"github.com/uptrace/bun"
-	"github.com/uptrace/bun/dialect/pgdialect"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/a-novel/golib/otel"
 )
 
 type Config interface {
-	SQLDB() (*sql.DB, error)
+	DB() (*bun.DB, error)
 	RunMigrations(ctx context.Context, client *bun.DB) error
 }
 
@@ -26,17 +24,12 @@ func InitPostgres(ctx context.Context, config Config) (context.Context, error) {
 	ctx, span := otel.Tracer().Start(ctx, "lib.NewPostgresContext")
 	defer span.End()
 
-	// Open a connection to the database.
-	sqldb, err := config.SQLDB()
-	if err != nil {
-		return ctx, otel.ReportError(span, fmt.Errorf("get sql db: %w", err))
-	}
-
-	span.AddEvent("db.connection.opened")
-
 	// Make a temporary assignation. If something goes wrong, it is unnecessary and misleading to assign a value
 	// to the global variable.
-	client := bun.NewDB(sqldb, pgdialect.New(), bun.WithDiscardUnknownColumns())
+	client, err := config.DB()
+	if err != nil {
+		return ctx, otel.ReportError(span, fmt.Errorf("get db client: %w", err))
+	}
 
 	span.AddEvent("bun.db.created")
 
@@ -66,7 +59,6 @@ func InitPostgres(ctx context.Context, config Config) (context.Context, error) {
 	// Close clients on context termination.
 	context.AfterFunc(ctxPG, func() {
 		_ = client.Close()
-		_ = sqldb.Close()
 	})
 
 	return otel.ReportSuccess(span, ctxPG), nil

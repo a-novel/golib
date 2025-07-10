@@ -7,6 +7,7 @@ import (
 	"io/fs"
 
 	"github.com/uptrace/bun"
+	"github.com/uptrace/bun/dialect/pgdialect"
 	"github.com/uptrace/bun/driver/pgdriver"
 	"github.com/uptrace/bun/migrate"
 )
@@ -16,8 +17,10 @@ type DefaultConfig struct {
 	Migrations fs.FS  `json:"-"   yaml:"-"`
 }
 
-func (config DefaultConfig) SQLDB() (*sql.DB, error) {
-	return sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(config.DSN))), nil
+func (config DefaultConfig) DB() (*bun.DB, error) {
+	sqldb := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(config.DSN)))
+
+	return bun.NewDB(sqldb, pgdialect.New(), bun.WithDiscardUnknownColumns()), nil
 }
 
 func (config DefaultConfig) RunMigrations(ctx context.Context, client *bun.DB) error {
