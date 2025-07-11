@@ -1,6 +1,6 @@
 module github.com/a-novel/golib
 
-go 1.24
+go 1.24.5
 
 require (
 	github.com/getsentry/sentry-go v0.34.1
