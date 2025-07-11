@@ -9,6 +9,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/a-novel/golib/otel"
+	postgrespresets "github.com/a-novel/golib/postgres/presets"
 )
 
 type Config interface {
@@ -22,6 +23,11 @@ type ContextKey struct{}
 const PingTimeout = 10 * time.Second
 
 func InitPostgres(ctx context.Context, config Config) (context.Context, error) {
+	if _, ok := config.(postgrespresets.PassthroughConfig); ok {
+		// If the config is a passthrough, we don't need to do anything.
+		return ctx, nil
+	}
+
 	ctx, span := otel.Tracer().Start(ctx, "lib.NewPostgresContext")
 	defer span.End()
 
