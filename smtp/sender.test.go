@@ -1,8 +1,10 @@
 package smtp
 
 import (
-	"sync"
 	"text/template"
+	"time"
+
+	"github.com/a-novel/golib/chans"
 )
 
 type TestMail struct {
@@ -11,21 +13,17 @@ type TestMail struct {
 }
 
 type TestSender struct {
-	received []TestMail
-	mu       sync.RWMutex
+	shared *chans.Shared[*TestMail]
 }
 
 func NewTestSender() *TestSender {
 	return &TestSender{
-		received: make([]TestMail, 0),
+		shared: chans.NewShared[*TestMail](),
 	}
 }
 
 func (sender *TestSender) SendMail(to []string, _ *template.Template, _ string, data any) error {
-	sender.mu.Lock()
-	defer sender.mu.Unlock()
-
-	sender.received = append(sender.received, TestMail{
+	sender.shared.Send(&TestMail{
 		To:   to,
 		Data: data,
 	})
@@ -33,9 +31,14 @@ func (sender *TestSender) SendMail(to []string, _ *template.Template, _ string, 
 	return nil
 }
 
-func (sender *TestSender) GetReceived() []TestMail {
-	sender.mu.RLock()
-	defer sender.mu.RUnlock()
+func (sender *TestSender) GetWaiter(
+	condition func(mail *TestMail) bool, timeout time.Duration,
+) *chans.Waiter[*TestMail] {
+	listener := sender.shared.Register()
 
-	return append([]TestMail{}, sender.received...)
+	waiter := chans.NewWaiter[*TestMail](listener, condition, timeout, func() {
+		sender.shared.Unregister(listener)
+	})
+
+	return waiter
 }
