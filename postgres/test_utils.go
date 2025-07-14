@@ -44,7 +44,7 @@ func RunIsolatedTransactionalTest(t *testing.T, config postgrespresets.DefaultCo
 	// Execute migrations on the new database.
 	require.NoError(t, config.RunMigrations(t.Context(), throwawayClient))
 
-	ctxPG := context.WithValue(t.Context(), ContextKey{}, bun.IDB(client))
+	ctxPG := context.WithValue(t.Context(), ContextKey{}, bun.IDB(throwawayClient))
 
 	callback(ctxPG, t, throwawayClient)
 }
