@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"database/sql"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -17,7 +18,7 @@ import (
 
 type TransactionalTestFunc func(context.Context, *testing.T, *bun.DB)
 
-const CreateThrowawayDB = `CREATE DATABASE %s WITH TEMPLATE current_database() OWNER CURRENT_USER;`
+const CreateThrowawayDB = "CREATE DATABASE %s WITH TEMPLATE current_database() OWNER current_user;"
 
 func RunIsolatedTransactionalTest(t *testing.T, config postgrespresets.DefaultConfig, callback TransactionalTestFunc) {
 	t.Helper()
@@ -28,10 +29,11 @@ func RunIsolatedTransactionalTest(t *testing.T, config postgrespresets.DefaultCo
 	require.NoError(t, WaitForDB(t.Context(), client))
 
 	// Create a new, temporary throwaway database.
-	dbName := rand.Text()
+	dbName := "ta_" + strings.ToLower(rand.Text())[:28]
 
-	_, err = client.NewRaw(fmt.Sprintf(CreateThrowawayDB, dbName)).Exec(t.Context())
-	require.NoError(t, err)
+	query := client.NewRaw(fmt.Sprintf(CreateThrowawayDB, dbName))
+	_, err = query.Exec(t.Context())
+	require.NoError(t, err, query.String())
 
 	sqldb := sql.OpenDB(pgdriver.NewConnector(
 		pgdriver.WithDSN(config.DSN),
