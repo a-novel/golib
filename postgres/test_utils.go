@@ -18,7 +18,9 @@ import (
 
 type TransactionalTestFunc func(context.Context, *testing.T, *bun.DB)
 
-const CreateThrowawayDB = "CREATE DATABASE %s WITH TEMPLATE current_database() OWNER current_user;"
+const CreateThrowawayDB = "CREATE DATABASE %s OWNER current_user;"
+
+const NameLen = 31
 
 func RunIsolatedTransactionalTest(t *testing.T, config postgrespresets.DefaultConfig, callback TransactionalTestFunc) {
 	t.Helper()
@@ -30,7 +32,7 @@ func RunIsolatedTransactionalTest(t *testing.T, config postgrespresets.DefaultCo
 
 	// Create a new, temporary throwaway database.
 	dbName := "ta_" + strings.ToLower(rand.Text())
-	dbName = fmt.Sprintf("%.*s", 31, dbName)
+	dbName = fmt.Sprintf("%.*s", NameLen, dbName)
 
 	query := client.NewRaw(fmt.Sprintf(CreateThrowawayDB, dbName))
 	_, err = query.Exec(t.Context())
@@ -48,6 +50,7 @@ func RunIsolatedTransactionalTest(t *testing.T, config postgrespresets.DefaultCo
 	})
 
 	require.NoError(t, WaitForDB(t.Context(), throwawayClient))
+	require.NoError(t, config.RunMigrations(t.Context(), throwawayClient))
 
 	ctxPG := context.WithValue(t.Context(), ContextKey{}, bun.IDB(throwawayClient))
 
