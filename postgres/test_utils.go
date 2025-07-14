@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"database/sql"
 	"fmt"
+	"math"
 	"strings"
 	"testing"
 
@@ -29,7 +30,8 @@ func RunIsolatedTransactionalTest(t *testing.T, config postgrespresets.DefaultCo
 	require.NoError(t, WaitForDB(t.Context(), client))
 
 	// Create a new, temporary throwaway database.
-	dbName := "ta_" + strings.ToLower(rand.Text())[:28]
+	dbName := "ta_" + strings.ToLower(rand.Text())
+	dbName = fmt.Sprintf("%.*s", 31, dbName)
 
 	query := client.NewRaw(fmt.Sprintf(CreateThrowawayDB, dbName))
 	_, err = query.Exec(t.Context())
