@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/uptrace/bun"
-	"go.opentelemetry.io/otel/trace"
 
 	"github.com/a-novel/golib/otel"
 	postgrespresets "github.com/a-novel/golib/postgres/presets"
@@ -40,17 +39,9 @@ func InitPostgres(ctx context.Context, config Config) (context.Context, error) {
 
 	span.AddEvent("bun.db.created")
 
-	// Wait for connection to be established.
-	start := time.Now()
-
-	for err = client.PingContext(ctx); err != nil; err = client.PingContext(ctx) {
-		span.AddEvent("db.ping.failed", trace.WithTimestamp(time.Now()))
-
-		if time.Since(start) > PingTimeout {
-			return ctx, otel.ReportError(span, fmt.Errorf("ping database: %w", err))
-		}
-
-		span.RecordError(err)
+	err = WaitForDB(ctx, client)
+	if err != nil {
+		return ctx, otel.ReportError(span, fmt.Errorf("wait for db: %w", err))
 	}
 
 	span.AddEvent("db.ping.success")
@@ -69,4 +60,16 @@ func InitPostgres(ctx context.Context, config Config) (context.Context, error) {
 	})
 
 	return otel.ReportSuccess(span, ctxPG), nil
+}
+
+func WaitForDB(ctx context.Context, client *bun.DB) error {
+	start := time.Now()
+
+	for err := client.PingContext(ctx); err != nil; err = client.PingContext(ctx) {
+		if time.Since(start) > PingTimeout {
+			return fmt.Errorf("ping database: %w", err)
+		}
+	}
+
+	return nil
 }
