@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"database/sql"
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
@@ -18,7 +19,7 @@ import (
 
 type TransactionalTestFunc func(context.Context, *testing.T, *bun.DB)
 
-const CreateThrowawayDB = "CREATE DATABASE %s TEMPLATE (SELECT current_database());"
+const CreateThrowawayDB = "CREATE DATABASE %s TEMPLATE %s;"
 
 const NameLen = 31
 
@@ -34,7 +35,16 @@ func RunIsolatedTransactionalTest(t *testing.T, config postgrespresets.DefaultCo
 	dbName := "ta_" + strings.ToLower(rand.Text())
 	dbName = fmt.Sprintf("%.*s", NameLen, dbName)
 
-	query := client.NewRaw(fmt.Sprintf(CreateThrowawayDB, dbName))
+	// Retrieve main database name to use as template.
+	u, err := url.Parse(config.DSN)
+	require.NoError(t, err)
+
+	sourceDB := "postgres"
+	if len(u.Path) > 1 {
+		sourceDB = u.Path[1:]
+	}
+
+	query := client.NewRaw(fmt.Sprintf(CreateThrowawayDB, dbName, sourceDB))
 	_, err = query.Exec(t.Context())
 	require.NoError(t, err, query.String())
 
