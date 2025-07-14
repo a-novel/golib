@@ -18,7 +18,7 @@ import (
 
 type TransactionalTestFunc func(context.Context, *testing.T, *bun.DB)
 
-const CreateThrowawayDB = "CREATE DATABASE %s;"
+const CreateThrowawayDB = "CREATE DATABASE %s TEMPLATE (SELECT current_database());"
 
 const NameLen = 31
 
@@ -50,7 +50,6 @@ func RunIsolatedTransactionalTest(t *testing.T, config postgrespresets.DefaultCo
 	})
 
 	require.NoError(t, WaitForDB(t.Context(), throwawayClient))
-	require.NoError(t, config.RunMigrations(t.Context(), throwawayClient))
 
 	ctxPG := context.WithValue(t.Context(), ContextKey{}, bun.IDB(throwawayClient))
 
