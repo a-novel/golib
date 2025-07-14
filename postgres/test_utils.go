@@ -19,7 +19,7 @@ import (
 
 type TransactionalTestFunc func(context.Context, *testing.T, *bun.DB)
 
-const CreateThrowawayDB = "CREATE DATABASE %s TEMPLATE %s;"
+const CreateThrowawayDB = "CREATE DATABASE %s TEMPLATE '%s';"
 
 const NameLen = 31
 
