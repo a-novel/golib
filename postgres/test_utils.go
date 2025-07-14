@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"database/sql"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -16,6 +17,8 @@ import (
 
 type TransactionalTestFunc func(context.Context, *testing.T, *bun.DB)
 
+const CreateThrowawayDB = `CREATE DATABASE %s WITH TEMPLATE current_database() OWNER CURRENT_USER;`
+
 func RunIsolatedTransactionalTest(t *testing.T, config postgrespresets.DefaultConfig, callback TransactionalTestFunc) {
 	t.Helper()
 
@@ -27,7 +30,7 @@ func RunIsolatedTransactionalTest(t *testing.T, config postgrespresets.DefaultCo
 	// Create a new, temporary throwaway database.
 	dbName := rand.Text()
 
-	_, err = client.NewRaw("CREATE DATABASE " + dbName + ";").Exec(t.Context())
+	_, err = client.NewRaw(fmt.Sprintf(CreateThrowawayDB, dbName)).Exec(t.Context())
 	require.NoError(t, err)
 
 	sqldb := sql.OpenDB(pgdriver.NewConnector(
@@ -42,9 +45,6 @@ func RunIsolatedTransactionalTest(t *testing.T, config postgrespresets.DefaultCo
 	})
 
 	require.NoError(t, WaitForDB(t.Context(), throwawayClient))
-
-	// Execute migrations on the new database.
-	require.NoError(t, config.RunMigrations(t.Context(), throwawayClient))
 
 	ctxPG := context.WithValue(t.Context(), ContextKey{}, bun.IDB(throwawayClient))
 
