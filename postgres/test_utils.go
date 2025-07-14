@@ -27,7 +27,7 @@ func RunIsolatedTransactionalTest(t *testing.T, config postgrespresets.DefaultCo
 	// Create a new, temporary throwaway database.
 	dbName := rand.Text()
 
-	_, err = client.NewRaw("CREATE DATABASE " + dbName).Exec(t.Context())
+	_, err = client.NewRaw("CREATE DATABASE " + dbName + ";").Exec(t.Context())
 	require.NoError(t, err)
 
 	sqldb := sql.OpenDB(pgdriver.NewConnector(
@@ -40,6 +40,8 @@ func RunIsolatedTransactionalTest(t *testing.T, config postgrespresets.DefaultCo
 		// Close the throwaway client to release resources.
 		_ = throwawayClient.Close()
 	})
+
+	require.NoError(t, WaitForDB(t.Context(), throwawayClient))
 
 	// Execute migrations on the new database.
 	require.NoError(t, config.RunMigrations(t.Context(), throwawayClient))
