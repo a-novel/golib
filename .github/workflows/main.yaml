@@ -24,10 +24,18 @@ jobs:
         with:
           pat: ${{ secrets.ACTION_PAT }}
 
+  test:
+    needs: [lint-go]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: a-novel-kit/workflows/go-actions/test-go@master
+
   report-grc:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master' && success()
-    needs: [lint-go]
+    needs: [test, lint-go]
     permissions:
       contents: read
     steps:

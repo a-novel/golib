@@ -1,7 +1,6 @@
 package chans
 
 import (
-	"sync"
 	"time"
 )
 
@@ -11,9 +10,7 @@ type Waiter[T any] struct {
 	timeout   time.Duration
 	onClose   func()
 
-	res      T
-	wg       sync.WaitGroup
-	timedOut bool
+	res chan T
 }
 
 func NewWaiter[T any](
@@ -27,37 +24,23 @@ func NewWaiter[T any](
 		condition: condition,
 		timeout:   timeout,
 		onClose:   onClose,
+		res:       make(chan T, 1), // Channel will only hold one result.
 	}
 
 	return waiter.init()
 }
 
 func (waiter *Waiter[T]) listen() {
-	defer waiter.wg.Done()
-
-	for {
-		select {
-		case <-time.After(waiter.timeout):
-			waiter.timedOut = true
+	for msg := range waiter.src {
+		if waiter.condition(msg) {
+			waiter.res <- msg
 
 			return
-		case msg, ok := <-waiter.src:
-			if !ok {
-				return // Channel closed, exit the goroutine.
-			}
-
-			if waiter.condition(msg) {
-				waiter.res = msg
-
-				return
-			}
 		}
 	}
 }
 
 func (waiter *Waiter[T]) init() *Waiter[T] {
-	waiter.wg.Add(1)
-
 	go waiter.listen()
 
 	return waiter
@@ -68,13 +51,19 @@ func (waiter *Waiter[T]) Wait() (T, bool) {
 		defer waiter.onClose()
 	}
 
-	waiter.wg.Wait()
+	timer := time.NewTimer(waiter.timeout)
+	defer timer.Stop()
 
-	if waiter.timedOut {
-		var zero T
+	for {
+		select {
+		case msg := <-waiter.res:
+			return msg, true
+		case <-timer.C:
+			var zero T
 
-		return zero, false
+			return zero, false
+		default:
+			continue
+		}
 	}
-
-	return waiter.res, true
 }

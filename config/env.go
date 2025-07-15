@@ -34,7 +34,7 @@ func SliceParser[T any](parser func(string) (T, error)) func(string) ([]T, error
 		// Parse each part using the provided parser.
 		parsedValues := make([]T, 0, len(parts))
 
-		for i, part := range parts {
+		for _, part := range parts {
 			trimmedPart := strings.TrimSpace(part)
 			if trimmedPart == "" {
 				continue // Skip empty parts.
@@ -46,7 +46,7 @@ func SliceParser[T any](parser func(string) (T, error)) func(string) ([]T, error
 				return nil, err
 			}
 
-			parsedValues[i] = parsedValue
+			parsedValues = append(parsedValues, parsedValue)
 		}
 
 		// If no parts were parsed, return the fallback.
