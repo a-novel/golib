@@ -48,6 +48,14 @@ func WithTx(ctx context.Context, opts *sql.TxOptions) (context.Context, func(com
 		return nil, nil, otel.ReportError(span, fmt.Errorf("retrieve pg: %w", err))
 	}
 
+	// If a passthrough transaction is used, we don't create a new transaction.
+	_, ok := pg.(PassthroughTx)
+	if ok {
+		return otel.ReportSuccess(span, ctx), func(commit bool) error {
+			return nil
+		}, nil
+	}
+
 	tx, err := pg.BeginTx(ctx, opts)
 	if err != nil {
 		return nil, nil, otel.ReportError(span, fmt.Errorf("begin tx: %w", err))
