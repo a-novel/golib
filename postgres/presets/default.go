@@ -65,8 +65,13 @@ func (config *Default) DBSchema(ctx context.Context, schema string, create bool)
 	config.mu.Lock()
 	defer config.mu.Unlock()
 
+	db, err := config.DB(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("get main db: %w", err)
+	}
+
 	if schema == "" {
-		return config.db, nil
+		return db, nil
 	}
 
 	if conn, exists := config.schemas[schema]; exists {
@@ -74,7 +79,7 @@ func (config *Default) DBSchema(ctx context.Context, schema string, create bool)
 	}
 
 	if create {
-		_, err := config.db.NewRaw(fmt.Sprintf(CreateSchema, schema)).Exec(ctx)
+		_, err := db.NewRaw(fmt.Sprintf(CreateSchema, schema)).Exec(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("create schema %s: %w", schema, err)
 		}
@@ -87,9 +92,9 @@ func (config *Default) DBSchema(ctx context.Context, schema string, create bool)
 			"search_path": schema,
 		}),
 	))
-	db := bun.NewDB(sqldb, pgdialect.New(), bun.WithDiscardUnknownColumns())
+	db = bun.NewDB(sqldb, pgdialect.New(), bun.WithDiscardUnknownColumns())
 
-	err := postgres.Ping(ctx, db)
+	err = postgres.Ping(ctx, db)
 	if err != nil {
 		return nil, fmt.Errorf("ping database schema %s: %w", schema, err)
 	}
