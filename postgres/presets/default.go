@@ -4,52 +4,97 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"io/fs"
+	"sync"
 
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
 	"github.com/uptrace/bun/driver/pgdriver"
-	"github.com/uptrace/bun/migrate"
+
+	"github.com/a-novel/golib/postgres"
 )
 
-type DefaultConfig struct {
-	DSN        string `json:"dsn" yaml:"dsn"`
-	Migrations fs.FS  `json:"-"   yaml:"-"`
+const (
+	// CreateSchema is the SQL statement used to create a schema in PostgreSQL.
+	//
+	// We use fmt rather than query arguments because sanitization
+	// does not expect schema names to be passed as arguments.
+	CreateSchema = "CREATE SCHEMA IF NOT EXISTS %s;"
+)
+
+type Default struct {
+	dsn     string
+	db      *bun.DB
+	schemas map[string]*bun.DB
+
+	mu sync.Mutex
 }
 
-func (config DefaultConfig) DB() (*bun.DB, error) {
-	sqldb := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(config.DSN)))
-
-	return bun.NewDB(sqldb, pgdialect.New(), bun.WithDiscardUnknownColumns()), nil
+func NewDefault(ctx context.Context, dsn string) *Default {
+	return &Default{
+		dsn:     dsn,
+		schemas: make(map[string]*bun.DB),
+	}
 }
 
-func (config DefaultConfig) RunMigrations(ctx context.Context, client *bun.DB) error {
-	if config.Migrations == nil {
-		return nil
+// DB returns the main database connection.
+func (config *Default) DB(ctx context.Context) (*bun.DB, error) {
+	config.mu.Lock()
+	defer config.mu.Unlock()
+
+	if config.db == nil {
+		sqldb := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(config.dsn)))
+		db := bun.NewDB(sqldb, pgdialect.New(), bun.WithDiscardUnknownColumns())
+
+		err := postgres.Ping(ctx, db)
+		if err != nil {
+			return nil, fmt.Errorf("ping database: %w", err)
+		}
+
+		config.db = db
 	}
 
-	mig := migrate.NewMigrations()
-
-	err := mig.Discover(config.Migrations)
-	if err != nil {
-		return fmt.Errorf("discover mig: %w", err)
-	}
-
-	migrator := migrate.NewMigrator(client, mig)
-
-	err = migrator.Init(ctx)
-	if err != nil {
-		return fmt.Errorf("create migrator: %w", err)
-	}
-
-	_, err = migrator.Migrate(ctx)
-	if err != nil {
-		return fmt.Errorf("apply mig: %w", err)
-	}
-
-	return nil
+	return config.db, nil
 }
 
-func (config DefaultConfig) Flush(client *bun.DB) {
-	_ = client.Close()
+// DBSchema returns a database connection for the specified schema. It smartly caches and reuses connections for
+// any given schema name.
+//
+// If the `create` parameter is true, and no connection exists for the specified schema, it will create the schema
+// in the database before returning the connection.
+func (config *Default) DBSchema(ctx context.Context, schema string, create bool) (*bun.DB, error) {
+	config.mu.Lock()
+	defer config.mu.Unlock()
+
+	if schema == "" {
+		return config.db, nil
+	}
+
+	if conn, exists := config.schemas[schema]; exists {
+		return conn, nil
+	}
+
+	if create {
+		_, err := config.db.NewRaw(fmt.Sprintf(CreateSchema, schema)).Exec(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("create schema %s: %w", schema, err)
+		}
+	}
+
+	sqldb := sql.OpenDB(pgdriver.NewConnector(
+		pgdriver.WithDSN(config.dsn),
+		// Override the default search path to use the specified schema.
+		pgdriver.WithConnParams(map[string]interface{}{
+			"search_path": schema,
+		}),
+	))
+	db := bun.NewDB(sqldb, pgdialect.New(), bun.WithDiscardUnknownColumns())
+
+	err := postgres.Ping(ctx, db)
+	if err != nil {
+		return nil, fmt.Errorf("ping database schema %s: %w", schema, err)
+	}
+
+	config.schemas[schema] = db
+
+	return db, nil
 }

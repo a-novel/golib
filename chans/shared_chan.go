@@ -6,8 +6,7 @@ import (
 
 // Shared forwards the data of a single channel to multiple listeners.
 type Shared[T any] struct {
-	// The listeners that are registered to receive data from the source channel. The boolean key is used to indicate
-	// whether the listener is still active or not.
+	// The listeners that are registered to receive data from the source channel.
 	listeners map[chan T]struct{}
 
 	mu sync.RWMutex
@@ -20,6 +19,9 @@ func NewShared[T any]() *Shared[T] {
 }
 
 func (multi *Shared[T]) readMSG(msg T) {
+	// Go channels are thread-safe. However, a channel can be closed
+	// while a message is being sent to it.
+	// Thr read-lock prevents the closing of listeners while a message is being sent.
 	multi.mu.RLock()
 	defer multi.mu.RUnlock()
 

@@ -29,3 +29,7 @@ func ReportSuccess[Resp any](span trace.Span, resp Resp) Resp {
 
 	return resp
 }
+
+func ReportSuccessNoContent(span trace.Span) {
+	span.SetStatus(codes.Ok, "")
+}

@@ -21,31 +21,31 @@ type PassthroughTx struct {
 	bun.Tx
 }
 
-func NewPassthroughTx(tx bun.Tx) PassthroughTx {
-	return PassthroughTx{Tx: tx}
+func NewPassthroughTx(tx bun.Tx) *PassthroughTx {
+	return &PassthroughTx{Tx: tx}
 }
 
-func (tx PassthroughTx) Commit() error {
+func (tx *PassthroughTx) Commit() error {
 	// no-op.
 	return nil
 }
 
-func (tx PassthroughTx) Rollback() error {
+func (tx *PassthroughTx) Rollback() error {
 	// no-op.
 	return nil
 }
 
-func (tx PassthroughTx) Begin() (bun.Tx, error) {
+func (tx *PassthroughTx) Begin() (bun.Tx, error) {
 	// no-op, return the same transaction.
 	return tx.Tx, nil
 }
 
-func (tx PassthroughTx) BeginTx(_ context.Context, _ *sql.TxOptions) (bun.Tx, error) {
+func (tx *PassthroughTx) BeginTx(_ context.Context, _ *sql.TxOptions) (bun.Tx, error) {
 	// no-op, return the same transaction.
 	return tx.Tx, nil
 }
 
-func (tx PassthroughTx) RunInTx(
+func (tx *PassthroughTx) RunInTx(
 	ctx context.Context, _ *sql.TxOptions, fn func(ctx context.Context, tx bun.Tx) error,
 ) error {
 	return fn(ctx, tx.Tx)
