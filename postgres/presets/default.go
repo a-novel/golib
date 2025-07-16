@@ -62,9 +62,6 @@ func (config *Default) DB(ctx context.Context) (*bun.DB, error) {
 // If the `create` parameter is true, and no connection exists for the specified schema, it will create the schema
 // in the database before returning the connection.
 func (config *Default) DBSchema(ctx context.Context, schema string, create bool) (*bun.DB, error) {
-	config.mu.Lock()
-	defer config.mu.Unlock()
-
 	db, err := config.DB(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("get main db: %w", err)
@@ -74,12 +71,15 @@ func (config *Default) DBSchema(ctx context.Context, schema string, create bool)
 		return db, nil
 	}
 
+	config.mu.Lock()
+	defer config.mu.Unlock()
+
 	if conn, exists := config.schemas[schema]; exists {
 		return conn, nil
 	}
 
 	if create {
-		_, err := db.NewRaw(fmt.Sprintf(CreateSchema, schema)).Exec(ctx)
+		_, err = db.NewRaw(fmt.Sprintf(CreateSchema, schema)).Exec(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("create schema %s: %w", schema, err)
 		}
