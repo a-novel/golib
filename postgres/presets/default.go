@@ -29,7 +29,7 @@ type Default struct {
 	mu sync.Mutex
 }
 
-func NewDefault(ctx context.Context, dsn string) *Default {
+func NewDefault(dsn string) *Default {
 	return &Default{
 		dsn:     dsn,
 		schemas: make(map[string]*bun.DB),
