@@ -1,10 +1,9 @@
 package smtp
 
 import (
+	"sync"
 	"text/template"
 	"time"
-
-	"github.com/a-novel/golib/chans"
 )
 
 type TestMail struct {
@@ -13,17 +12,19 @@ type TestMail struct {
 }
 
 type TestSender struct {
-	shared *chans.Shared[*TestMail]
+	mails []*TestMail
+	mu    sync.RWMutex
 }
 
 func NewTestSender() *TestSender {
-	return &TestSender{
-		shared: chans.NewShared[*TestMail](),
-	}
+	return &TestSender{}
 }
 
 func (sender *TestSender) SendMail(to []string, _ *template.Template, _ string, data any) error {
-	sender.shared.Send(&TestMail{
+	sender.mu.Lock()
+	defer sender.mu.Unlock()
+
+	sender.mails = append(sender.mails, &TestMail{
 		To:   to,
 		Data: data,
 	})
@@ -31,14 +32,19 @@ func (sender *TestSender) SendMail(to []string, _ *template.Template, _ string, 
 	return nil
 }
 
-func (sender *TestSender) GetWaiter(
-	condition func(mail *TestMail) bool, timeout time.Duration,
-) *chans.Waiter[*TestMail] {
-	listener := sender.shared.Register()
+func (sender *TestSender) FindTestMail(cmp func(*TestMail) bool, timeout time.Duration) (*TestMail, bool) {
+	sender.mu.RLock()
+	defer sender.mu.RUnlock()
 
-	waiter := chans.NewWaiter[*TestMail](listener, condition, timeout, func() {
-		sender.shared.Unregister(listener)
-	})
+	start := time.Now()
 
-	return waiter
+	for time.Since(start) < timeout {
+		for _, mail := range sender.mails {
+			if cmp(mail) {
+				return mail, true
+			}
+		}
+	}
+
+	return nil, false
 }
