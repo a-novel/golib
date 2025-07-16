@@ -3,7 +3,6 @@ package smtp
 import (
 	"sync"
 	"text/template"
-	"time"
 )
 
 type TestMail struct {
@@ -32,17 +31,13 @@ func (sender *TestSender) SendMail(to []string, _ *template.Template, _ string, 
 	return nil
 }
 
-func (sender *TestSender) FindTestMail(cmp func(*TestMail) bool, timeout time.Duration) (*TestMail, bool) {
+func (sender *TestSender) FindTestMail(cmp func(*TestMail) bool) (*TestMail, bool) {
 	sender.mu.RLock()
 	defer sender.mu.RUnlock()
 
-	start := time.Now()
-
-	for time.Since(start) < timeout {
-		for _, mail := range sender.mails {
-			if cmp(mail) {
-				return mail, true
-			}
+	for _, mail := range sender.mails {
+		if cmp(mail) {
+			return mail, true
 		}
 	}
 
