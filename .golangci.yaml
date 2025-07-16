@@ -41,3 +41,18 @@ linters:
         rules:
           json: goCamel
           yaml: goCamel
+
+  exclusions:
+    paths:
+      - mocks
+    rules:
+      - path: (.+)_test.go
+        linters:
+          - forcetypeassert
+          - maintidx
+          - gocognit
+          - tagliatelle
+          - cyclop
+          - err113
+          - gosec
+          - goconst
