@@ -42,14 +42,7 @@ func RunIsolatedTransactionalTest(t *testing.T, config Config, migrations fs.FS,
 	db, err := GetContext(ctx)
 	require.NoError(t, err)
 
-	tx, err := db.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelReadCommitted})
-	require.NoError(t, err)
-
-	t.Cleanup(func() {
-		_ = tx.Rollback()
-	})
-
-	ctx = context.WithValue(ctx, ContextKey{}, NewPassthroughTx(tx))
+	ctx = context.WithValue(ctx, ContextKey{}, db)
 	callback(ctx, t)
 }
 
