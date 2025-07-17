@@ -23,13 +23,7 @@ func NewContextTest(ctx context.Context, config Config) (context.Context, error)
 		return nil, fmt.Errorf("get db from config: %w", err)
 	}
 
-	ctx = context.WithValue(ctx, ContextKey{}, db)
-
-	context.AfterFunc(ctx, func() {
-		_ = db.Close()
-	})
-
-	return ctx, nil
+	return context.WithValue(ctx, ContextKey{}, db), nil
 }
 
 // RunIsolatedTransactionalTest runs test in a temporary throwaway schema. This allows for operations that cannot

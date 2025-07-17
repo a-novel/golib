@@ -22,8 +22,11 @@ const (
 )
 
 type Default struct {
-	dsn     string
-	db      *bun.DB
+	dsn string
+
+	// Main database connection.
+	db *bun.DB
+	// Maintain separate connections for each schema.
 	schemas map[string]*bun.DB
 
 	mu sync.Mutex
