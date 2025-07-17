@@ -19,13 +19,7 @@ func NewContext(ctx context.Context, config Config) (context.Context, error) {
 		return nil, fmt.Errorf("get db from config: %w", err)
 	}
 
-	ctx = context.WithValue(ctx, ContextKey{}, db)
-
-	context.AfterFunc(ctx, func() {
-		_ = db.Close()
-	})
-
-	return ctx, nil
+	return context.WithValue(ctx, ContextKey{}, db), nil
 }
 
 func NewContextSchema(ctx context.Context, config Config, schema string, create bool) (context.Context, error) {
@@ -34,13 +28,7 @@ func NewContextSchema(ctx context.Context, config Config, schema string, create 
 		return nil, fmt.Errorf("get db from config: %w", err)
 	}
 
-	ctx = context.WithValue(ctx, ContextKey{}, db)
-
-	context.AfterFunc(ctx, func() {
-		_ = db.Close()
-	})
-
-	return ctx, nil
+	return context.WithValue(ctx, ContextKey{}, db), nil
 }
 
 func GetContext(ctx context.Context) (bun.IDB, error) {
