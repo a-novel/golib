@@ -22,19 +22,19 @@ const (
 )
 
 type Default struct {
-	dsn string
+	options []pgdriver.Option
 
 	// Main database connection.
 	db *bun.DB
 	// Maintain separate connections for each schema.
 	schemas map[string]*bun.DB
 
-	mu sync.Mutex
+	mu sync.RWMutex
 }
 
-func NewDefault(dsn string) *Default {
+func NewDefault(options ...pgdriver.Option) *Default {
 	return &Default{
-		dsn:     dsn,
+		options: options,
 		schemas: make(map[string]*bun.DB),
 	}
 }
@@ -45,7 +45,7 @@ func (config *Default) DB(ctx context.Context) (*bun.DB, error) {
 	defer config.mu.Unlock()
 
 	if config.db == nil {
-		sqldb := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(config.dsn)))
+		sqldb := sql.OpenDB(pgdriver.NewConnector(config.options...))
 		db := bun.NewDB(sqldb, pgdialect.New(), bun.WithDiscardUnknownColumns())
 
 		err := postgres.Ping(ctx, db)
@@ -88,13 +88,10 @@ func (config *Default) DBSchema(ctx context.Context, schema string, create bool)
 		}
 	}
 
-	sqldb := sql.OpenDB(pgdriver.NewConnector(
-		pgdriver.WithDSN(config.dsn),
-		// Override the default search path to use the specified schema.
-		pgdriver.WithConnParams(map[string]interface{}{
-			"search_path": schema,
-		}),
-	))
+	options := config.Options()
+	options = append(options, pgdriver.WithConnParams(map[string]any{"search_path": schema}))
+
+	sqldb := sql.OpenDB(pgdriver.NewConnector(options...))
 	db = bun.NewDB(sqldb, pgdialect.New(), bun.WithDiscardUnknownColumns())
 
 	err = postgres.Ping(ctx, db)
@@ -105,4 +102,11 @@ func (config *Default) DBSchema(ctx context.Context, schema string, create bool)
 	config.schemas[schema] = db
 
 	return db, nil
+}
+
+func (config *Default) Options() []pgdriver.Option {
+	config.mu.RLock()
+	defer config.mu.RUnlock()
+
+	return append([]pgdriver.Option{}, config.options...)
 }
