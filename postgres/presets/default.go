@@ -88,7 +88,7 @@ func (config *Default) DBSchema(ctx context.Context, schema string, create bool)
 		}
 	}
 
-	options := config.Options()
+	options := append([]pgdriver.Option{}, config.options...)
 	options = append(options, pgdriver.WithConnParams(map[string]any{"search_path": schema}))
 
 	sqldb := sql.OpenDB(pgdriver.NewConnector(options...))
