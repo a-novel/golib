@@ -17,6 +17,7 @@ formatters:
 linters:
   default: all
   disable:
+    - wsl
     - godox
     - depguard
     - dupl

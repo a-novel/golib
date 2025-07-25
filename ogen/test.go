@@ -1,6 +1,7 @@
 package ogen
 
 import (
+	"context"
 	"fmt"
 	"net"
 )
@@ -21,7 +22,7 @@ func MustGetResponse[Raw any, Want any](res Raw, err error) (Want, error) {
 }
 
 func GetRandomPort() (int, error) {
-	listener, err := net.Listen("tcp", ":0") //nolint:gosec
+	listener, err := (&net.ListenConfig{}).Listen(context.Background(), "tcp", ":0")
 	if err != nil {
 		return 0, fmt.Errorf("failed to create listener: %w", err)
 	}
