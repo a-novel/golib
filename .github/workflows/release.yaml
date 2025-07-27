@@ -12,5 +12,3 @@ jobs:
       contents: write
     steps:
       - uses: a-novel-kit/workflows/publish-actions/auto-release@master
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
