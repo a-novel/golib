@@ -1,5 +1,12 @@
 name: auto-approve dependabot
-on: pull_request
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: The pull request number to approve
+        required: true
+        type: number
 
 permissions:
   contents: write
@@ -11,9 +18,8 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-    if: github.event.pull_request.user.login == 'renovate[bot]'
     steps:
       - uses: actions/checkout@v4
       - uses: a-novel-kit/workflows/generic-actions/approve-bot@master
         with:
-          pull_request: ${{ github.event.pull_request.html_url }}
+          pull_request: "https://github.com/${{ github.event.organization.login }}/${{ github.event.repository.name }}/pull/${{ inputs.pr }}"
