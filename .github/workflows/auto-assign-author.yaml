@@ -12,3 +12,5 @@ jobs:
     if: ${{ github.event.pull_request.user.login != 'renovate[bot]' }}
     steps:
       - uses: a-novel-kit/workflows/generic-actions/assign-bot@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
