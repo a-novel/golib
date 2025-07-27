@@ -1,4 +1,4 @@
-name: auto-approve dependabot
+name: self-approve admin
 
 on:
   workflow_dispatch:
