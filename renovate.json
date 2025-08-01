@@ -3,7 +3,7 @@
   "assignAutomerge": true,
   "assignees": ["kushuh"],
   "postUpgradeTasks": {
-    "commands": ["sh ./scripts/post-upgrade-renovate.sh"],
+    "commands": ["bash ./scripts/post-upgrade-renovate.sh"],
     "executionMode": "branch"
   },
   "packageRules": [

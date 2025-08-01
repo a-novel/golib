@@ -10,6 +10,6 @@ jobs:
     steps:
       - uses: a-novel-kit/workflows/generic-actions/renovate@master
         with:
-          allowed_commands: '["^sh \\./scripts/post-upgrade-renovate.sh$"]'
+          allowed_commands: '["^bash \\./scripts/post-upgrade-renovate.sh$"]'
           pat: ${{ secrets.ACTION_PAT }}
           with_node: true
