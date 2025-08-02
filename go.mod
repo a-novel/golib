@@ -3,8 +3,8 @@ module github.com/a-novel/golib
 go 1.24.5
 
 require (
-	github.com/getsentry/sentry-go v0.34.1
-	github.com/getsentry/sentry-go/otel v0.34.1
+	github.com/getsentry/sentry-go v0.35.0
+	github.com/getsentry/sentry-go/otel v0.35.0
 	github.com/samber/lo v1.51.0
 	github.com/stretchr/testify v1.10.0
 	github.com/uptrace/bun v1.2.15
