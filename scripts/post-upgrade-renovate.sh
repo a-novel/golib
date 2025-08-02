@@ -9,10 +9,11 @@ FNM="$FNM_DIR/fnm"
 
 curl -o- https://fnm.vercel.app/install | bash -s -- --install-dir "$FNM_DIR"
 eval "$("$FNM" env)"
-"$FNM" install 24
+"$FNM" install --latest --log-level error --use
 
-node -v || echo "node install failed" && exit 1
-npm -v || echo "npm install failed" && exit 1
+which node || echo "node install failed" && exit 1
+which npm || echo "npm install failed" && exit 1
+which npx || echo "npx install failed" && exit 1
 # ======================================================================================================================
 
 npx -y prettier . --write
