@@ -28,9 +28,7 @@ import (
 )
 
 type GCloudOtelConfig struct {
-	ServerName   string        `json:"serverName"   yaml:"serverName"`
 	ProjectID    string        `json:"projectID"    yaml:"projectID"`
-	PrettyPrint  bool          `json:"prettyPrint"  yaml:"prettyPrint"`
 	FlushTimeout time.Duration `json:"flushTimeout" yaml:"flushTimeout"`
 }
 
