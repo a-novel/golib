@@ -52,5 +52,5 @@ func (sender *ProdSender) Ping() error {
 		return errors.Join(fmt.Errorf("quit SMTP connection: %w", err), conn.Close())
 	}
 
-	return conn.Close()
+	return nil
 }
