@@ -1,9 +1,12 @@
 package smtp
 
 import (
+	"errors"
 	"sync"
 	"text/template"
 )
+
+var ErrPingTestSender = errors.New("pinging test sender: make sure this is not a misconfiguration")
 
 type TestMail struct {
 	To   []string
@@ -29,6 +32,10 @@ func (sender *TestSender) SendMail(to []string, _ *template.Template, _ string, 
 	})
 
 	return nil
+}
+
+func (sender *TestSender) Ping() error {
+	return ErrPingTestSender
 }
 
 func (sender *TestSender) FindTestMail(cmp func(*TestMail) bool) (*TestMail, bool) {

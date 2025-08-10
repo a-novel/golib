@@ -27,3 +27,7 @@ func (sender *DebugSender) SendMail(_ []string, t *template.Template, tName stri
 
 	return nil
 }
+
+func (sender *DebugSender) Ping() error {
+	return nil
+}

@@ -2,6 +2,7 @@ package smtp
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"net/smtp"
 	"text/template"
@@ -31,4 +32,25 @@ func (sender *ProdSender) SendMail(to []string, t *template.Template, tName stri
 	}
 
 	return nil
+}
+
+func (sender *ProdSender) Ping() error {
+	auth := smtp.PlainAuth(sender.Name, sender.Email, sender.Password, sender.Domain)
+
+	conn, err := smtp.Dial(sender.Addr)
+	if err != nil {
+		return fmt.Errorf("dial SMTP server: %w", err)
+	}
+
+	err = conn.Auth(auth)
+	if err != nil {
+		return errors.Join(fmt.Errorf("authenticate with SMTP server: %w", err), conn.Close())
+	}
+
+	err = conn.Quit()
+	if err != nil {
+		return errors.Join(fmt.Errorf("quit SMTP connection: %w", err), conn.Close())
+	}
+
+	return conn.Close()
 }
