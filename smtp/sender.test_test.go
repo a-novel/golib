@@ -15,8 +15,8 @@ func TestTestSender(t *testing.T) {
 
 	sender := smtp.NewTestSender()
 
-	require.NoError(t, sender.SendMail([]string{"user"}, nil, "", map[string]string{"test": "foo"}))
-	require.NoError(t, sender.SendMail([]string{"user"}, nil, "", map[string]string{"test": "bar"}))
+	require.NoError(t, sender.SendMail(smtp.MailUsers{{Email: "user"}}, nil, "", map[string]string{"test": "foo"}))
+	require.NoError(t, sender.SendMail(smtp.MailUsers{{Email: "user"}}, nil, "", map[string]string{"test": "bar"}))
 
 	require.Eventually(t, func() bool {
 		res, ok := sender.FindTestMail(func(mail *smtp.TestMail) bool {

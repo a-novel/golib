@@ -16,7 +16,7 @@ type ProdSender struct {
 	Domain   string `json:"domain"   yaml:"domain"`
 }
 
-func (sender *ProdSender) SendMail(to []string, t *template.Template, tName string, data any) error {
+func (sender *ProdSender) SendMail(to MailUsers, t *template.Template, tName string, data any) error {
 	writer := bytes.NewBuffer(nil)
 
 	err := t.ExecuteTemplate(writer, tName, data)
@@ -26,7 +26,11 @@ func (sender *ProdSender) SendMail(to []string, t *template.Template, tName stri
 
 	auth := smtp.PlainAuth(sender.Name, sender.Email, sender.Password, sender.Domain)
 
-	err = smtp.SendMail(sender.Addr, auth, sender.Email, to, writer.Bytes())
+	msg := fmt.Sprintf("From: %s <%s>\r\n", sender.Name, sender.Email)
+	msg += fmt.Sprintf("To: %s\r\n", to.String())
+	msg += writer.String()
+
+	err = smtp.SendMail(sender.Addr, auth, sender.Email, to.Emails(), []byte(msg))
 	if err != nil {
 		return fmt.Errorf("send email: %w", err)
 	}

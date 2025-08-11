@@ -22,12 +22,12 @@ func NewTestSender() *TestSender {
 	return &TestSender{}
 }
 
-func (sender *TestSender) SendMail(to []string, _ *template.Template, _ string, data any) error {
+func (sender *TestSender) SendMail(to MailUsers, _ *template.Template, _ string, data any) error {
 	sender.mu.Lock()
 	defer sender.mu.Unlock()
 
 	sender.mails = append(sender.mails, &TestMail{
-		To:   to,
+		To:   to.Emails(),
 		Data: data,
 	})
 

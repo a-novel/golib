@@ -19,7 +19,7 @@ func NewDebugSender(writer io.Writer) *DebugSender {
 	return &DebugSender{writer: writer}
 }
 
-func (sender *DebugSender) SendMail(_ []string, t *template.Template, tName string, data any) error {
+func (sender *DebugSender) SendMail(_ MailUsers, t *template.Template, tName string, data any) error {
 	err := t.ExecuteTemplate(sender.writer, tName, data)
 	if err != nil {
 		return fmt.Errorf("execute template err: %w", err)
