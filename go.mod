@@ -1,6 +1,6 @@
 module github.com/a-novel/golib
 
-go 1.24.6
+go 1.25.0
 
 require (
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace v1.29.0
