@@ -6,6 +6,8 @@ import (
 	"net"
 )
 
+// MustGetResponse is a helper function to assert the response-type from an ogen-generated client method.
+// It returns an error if the response is not of the expected type.
 func MustGetResponse[Raw any, Want any](res Raw, err error) (Want, error) {
 	var zero Want
 
@@ -21,6 +23,7 @@ func MustGetResponse[Raw any, Want any](res Raw, err error) (Want, error) {
 	return out, nil
 }
 
+// GetRandomPort returns an available random port.
 func GetRandomPort() (int, error) {
 	listener, err := (&net.ListenConfig{}).Listen(context.Background(), "tcp", ":0")
 	if err != nil {
