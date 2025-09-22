@@ -7,7 +7,7 @@ require (
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/propagator v0.53.0
 	github.com/fatih/color v1.18.0
 	github.com/getsentry/sentry-go v0.35.1
-	github.com/getsentry/sentry-go/otel v0.35.1
+	github.com/getsentry/sentry-go/otel v0.35.3
 	github.com/rs/zerolog v1.34.0
 	github.com/samber/lo v1.51.0
 	github.com/stretchr/testify v1.10.0
