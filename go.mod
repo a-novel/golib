@@ -4,7 +4,7 @@ go 1.25.1
 
 require (
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace v1.30.0
-	github.com/GoogleCloudPlatform/opentelemetry-operations-go/propagator v0.53.0
+	github.com/GoogleCloudPlatform/opentelemetry-operations-go/propagator v0.54.0
 	github.com/fatih/color v1.18.0
 	github.com/getsentry/sentry-go v0.35.3
 	github.com/getsentry/sentry-go/otel v0.35.3
