@@ -6,7 +6,7 @@ require (
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace v1.30.0
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/propagator v0.54.0
 	github.com/fatih/color v1.18.0
-	github.com/getsentry/sentry-go v0.36.0
+	github.com/getsentry/sentry-go v0.36.1
 	github.com/getsentry/sentry-go/otel v0.36.0
 	github.com/rs/zerolog v1.34.0
 	github.com/samber/lo v1.52.0
