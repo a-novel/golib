@@ -3,6 +3,7 @@ package deps
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/samber/lo"
 )
@@ -10,13 +11,13 @@ import (
 var ErrCircularDependency = errors.New("circular dependency detected")
 
 func printDepsGraph[Mod comparable](deps map[Mod]map[Mod]bool) string {
-	var output string
+	var output strings.Builder
 
 	for mod, localDeps := range deps {
-		output += fmt.Sprintf("\n\t%v -> %v", mod, lo.Keys(localDeps))
+		output.WriteString(fmt.Sprintf("\n\t%v -> %v", mod, lo.Keys(localDeps)))
 	}
 
-	return output
+	return output.String()
 }
 
 // ResolveDependants unwraps a flat list of dependencies, given a map of interdependent modules. It also prevents
