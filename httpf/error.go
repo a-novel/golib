@@ -10,11 +10,20 @@ import (
 	"github.com/a-novel/golib/otel"
 )
 
-func HandleError(_ context.Context, w http.ResponseWriter, span trace.Span, errMap map[error]int, err error) {
+type ErrMap map[error]int
+
+func HandleError(_ context.Context, w http.ResponseWriter, span trace.Span, errMap ErrMap, err error) {
 	err = otel.ReportError(span, err)
 	status := http.StatusInternalServerError
 
 	for ref, refStatus := range errMap {
+		// Default value override. Only effective if no other error matches.
+		if ref == nil {
+			status = refStatus
+
+			continue
+		}
+
 		if errors.Is(err, ref) {
 			status = refStatus
 
