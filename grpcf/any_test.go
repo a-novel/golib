@@ -1,11 +1,11 @@
-package proto_test
+package grpcf_test
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/a-novel/golib/proto"
+	"github.com/a-novel/golib/grpcf"
 )
 
 func TestProtoAnyConversion(t *testing.T) {
@@ -15,10 +15,10 @@ func TestProtoAnyConversion(t *testing.T) {
 		"message": "hello world",
 	}
 
-	toProto, err := proto.InterfaceToProtoAny(anyValue)
+	toProto, err := grpcf.InterfaceToProtoAny(anyValue)
 	require.NoError(t, err)
 
-	fromProto, err := proto.ProtoAnyToInterface(toProto)
+	fromProto, err := grpcf.ProtoAnyToInterface(toProto)
 	require.NoError(t, err)
 
 	require.Equal(t, anyValue, fromProto)
