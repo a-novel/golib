@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+service EchoService {
+  rpc UnaryEcho(UnaryEchoRequest) returns (UnaryEchoResponse) {}
+  rpc ServerStreamingEcho(ServerStreamingEchoRequest) returns (stream ServerStreamingEchoResponse) {}
+  rpc ClientStreamingEcho(stream ClientStreamingEchoRequest) returns (ClientStreamingEchoResponse) {}
+  rpc BidirectionalStreamingEcho(stream BidirectionalStreamingEchoRequest) returns (stream BidirectionalStreamingEchoResponse) {}
+}
+
+message UnaryEchoRequest {
+  string message = 1;
+}
+
+message UnaryEchoResponse {
+  string message = 1;
+}
+
+message ServerStreamingEchoRequest {
+  string message = 1;
+}
+
+message ServerStreamingEchoResponse {
+  string message = 1;
+}
+
+message ClientStreamingEchoRequest {
+  string message = 1;
+}
+
+message ClientStreamingEchoResponse {
+  string message = 1;
+}
+
+message BidirectionalStreamingEchoRequest {
+  string message = 1;
+}
+
+message BidirectionalStreamingEchoResponse {
+  string message = 1;
+}

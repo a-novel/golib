@@ -140,6 +140,7 @@ linters:
   exclusions:
     paths:
       - mocks
+      - proto
     rules:
       - path: (.+)_test.go
         linters:
