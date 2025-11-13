@@ -27,7 +27,6 @@ var _ otel.Config = (*Local)(nil)
 
 // Local configures OTEL to log traces & logs to stdout.
 type Local struct {
-	PrettyPrint  bool          `json:"prettyPrint"  yaml:"prettyPrint"`
 	FlushTimeout time.Duration `json:"flushTimeout" yaml:"flushTimeout"`
 }
 
