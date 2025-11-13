@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/samber/lo"
+
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 )
