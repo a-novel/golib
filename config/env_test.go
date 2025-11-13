@@ -188,3 +188,18 @@ func TestEnvStringSliceParser(t *testing.T) {
 	require.Equal(t, custom, config.LoadEnv(os.Getenv("foo"), basic, config.SliceParser(config.StringParser)))
 	require.Equal(t, basic, config.LoadEnv(os.Getenv("bar"), basic, config.SliceParser(config.StringParser)))
 }
+
+func TestEnvEnumParser(t *testing.T) {
+	t.Setenv("foo", "bar")
+
+	require.Equal(
+		t,
+		"bar",
+		config.LoadEnv(os.Getenv("foo"), "invalid", config.EnumParser(config.StringParser, "foo", "bar")),
+	)
+	require.Equal(
+		t,
+		"invalid",
+		config.LoadEnv(os.Getenv("foo"), "invalid", config.EnumParser(config.StringParser, "foo", "baz")),
+	)
+}

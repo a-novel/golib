@@ -67,6 +67,23 @@ func StringParser(value string) (string, error) {
 	return value, nil
 }
 
+func EnumParser[T comparable](parser func(string) (T, error), allow ...T) func(string) (T, error) {
+	return func(value string) (T, error) {
+		raw, err := parser(value)
+		if err != nil {
+			return raw, err
+		}
+
+		for _, allowed := range allow {
+			if raw == allowed {
+				return raw, nil
+			}
+		}
+
+		return raw, fmt.Errorf(`value "%s" is not allowed`, value)
+	}
+}
+
 // Int64Parser is a parsing function for LoadEnv, that returns the int64 representation of the variable.
 // For more information about supported value, refer to the documentation of strconv.ParseInt.
 func Int64Parser(value string) (int64, error) {
