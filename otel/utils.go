@@ -9,6 +9,12 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
+var AppName string
+
+func SetAppName(name string) {
+	AppName = name
+}
+
 func Tracer(options ...trace.TracerOption) trace.Tracer {
 	return otel.GetTracerProvider().Tracer(AppName, options...)
 }

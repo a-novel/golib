@@ -2,15 +2,16 @@ package otelpresets
 
 import (
 	"context"
-	"fmt"
 	stdlog "log"
 	"net/http"
 	"time"
 
 	"github.com/fatih/color"
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/codes"
+	"google.golang.org/grpc"
+
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	otellib "go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/stdout/stdoutlog"
 	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
 	"go.opentelemetry.io/otel/log"
@@ -19,29 +20,30 @@ import (
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/trace"
 
-	libotel "github.com/a-novel/golib/otel"
-	"github.com/a-novel/golib/otel/utils"
+	"github.com/a-novel/golib/otel"
 )
 
-// LocalOtelConfig configures OTEL to log traces & logs to stdout.
-type LocalOtelConfig struct {
+var _ otel.Config = (*Local)(nil)
+
+// Local configures OTEL to log traces & logs to stdout.
+type Local struct {
 	PrettyPrint  bool          `json:"prettyPrint"  yaml:"prettyPrint"`
 	FlushTimeout time.Duration `json:"flushTimeout" yaml:"flushTimeout"`
 }
 
 // Init just prints a banner for local dev mode.
-func (config *LocalOtelConfig) Init() error {
+func (config *Local) Init() error {
 	green := color.New(color.FgGreen).Add(color.Bold)
 	_, _ = green.Println("🚀 OpenTelemetry Local Mode: All traces and logs to stdout")
 
 	return nil
 }
 
-func (config *LocalOtelConfig) GetPropagators() (propagation.TextMapPropagator, error) {
+func (config *Local) GetPropagators() (propagation.TextMapPropagator, error) {
 	return propagation.TraceContext{}, nil
 }
 
-func (config *LocalOtelConfig) GetTraceProvider() (trace.TracerProvider, error) {
+func (config *Local) GetTraceProvider() (trace.TracerProvider, error) {
 	traceExporter, err := stdouttrace.New(
 		stdouttrace.WithPrettyPrint(),
 		stdouttrace.WithWriter(color.Output), // writes with color support
@@ -51,13 +53,14 @@ func (config *LocalOtelConfig) GetTraceProvider() (trace.TracerProvider, error) 
 	}
 
 	tp := sdktrace.NewTracerProvider(
+		sdktrace.WithSampler(sdktrace.AlwaysSample()),
 		sdktrace.WithBatcher(traceExporter),
 	)
 
 	return tp, nil
 }
 
-func (config *LocalOtelConfig) GetLogger() (log.LoggerProvider, error) {
+func (config *Local) GetLogger() (log.LoggerProvider, error) {
 	logExporter, err := stdoutlog.New(
 		stdoutlog.WithPrettyPrint(),
 		stdoutlog.WithWriter(color.Output),
@@ -71,8 +74,8 @@ func (config *LocalOtelConfig) GetLogger() (log.LoggerProvider, error) {
 	), nil
 }
 
-func (config *LocalOtelConfig) Flush() {
-	provider := otel.GetTracerProvider()
+func (config *Local) Flush() {
+	provider := otellib.GetTracerProvider()
 
 	tp, ok := provider.(*sdktrace.TracerProvider)
 	if ok {
@@ -83,56 +86,10 @@ func (config *LocalOtelConfig) Flush() {
 	}
 }
 
-func (config *LocalOtelConfig) HTTPHandler() func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			ctx, span := libotel.Tracer().Start(r.Context(), fmt.Sprintf("[%s] %s.%s", r.Method, r.Host, r.URL.Path))
-			defer span.End()
+func (config *Local) HttpHandler() func(http.Handler) http.Handler {
+	return otelhttp.NewMiddleware("")
+}
 
-			span.SetAttributes(
-				attribute.String("request.method", r.Method),
-				attribute.String("request.host", r.Host),
-				attribute.String("request.path", r.URL.Path),
-				attribute.String("request.remote_addr", r.RemoteAddr),
-			)
-
-			wrapped := &utils.CaptureHTTPResponseWriter{ResponseWriter: w}
-			next.ServeHTTP(wrapped, r.WithContext(ctx))
-
-			status := wrapped.Status()
-
-			span.SetAttributes(
-				attribute.Int("response.status_code", status),
-				attribute.String("response.status_text", http.StatusText(status)),
-			)
-
-			switch {
-			case status >= http.StatusInternalServerError:
-				span.RecordError(fmt.Errorf("HTTP %d: %s", status, http.StatusText(status)))
-				span.SetStatus(codes.Error, http.StatusText(status))
-
-				_, _ = fmt.Fprintf(
-					color.Output,
-					color.RedString("❌ %s %s %d: %s\n"),
-					r.Method, r.URL.Path, status, http.StatusText(status),
-				)
-			case status >= http.StatusBadRequest:
-				span.SetStatus(codes.Error, http.StatusText(status))
-
-				_, _ = fmt.Fprintf(
-					color.Output,
-					color.YellowString("⚠️ %s %s %d: %s\n"),
-					r.Method, r.URL.Path, status, http.StatusText(status),
-				)
-			default:
-				span.SetStatus(codes.Ok, "")
-
-				_, _ = fmt.Fprintf(
-					color.Output,
-					color.GreenString("✅ %s %s %d: %s\n"),
-					r.Method, r.URL.Path, status, http.StatusText(status),
-				)
-			}
-		})
-	}
+func (config *Local) RpcInterceptor() grpc.ServerOption {
+	return grpc.StatsHandler(otelgrpc.NewServerHandler())
 }

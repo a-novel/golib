@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"google.golang.org/grpc"
+
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/log"
 	"go.opentelemetry.io/otel/log/global"
@@ -11,22 +13,22 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-var AppName string
-
 type Config interface {
 	Init() error
 	GetPropagators() (propagation.TextMapPropagator, error)
 	GetTraceProvider() (trace.TracerProvider, error)
 	GetLogger() (log.LoggerProvider, error)
 	Flush()
-	HTTPHandler() func(http.Handler) http.Handler
+	HttpHandler() func(http.Handler) http.Handler
+	RpcInterceptor() grpc.ServerOption
 }
 
-func SetAppName(name string) {
-	AppName = name
-}
+func Init(config Config) error {
+	// Telemetry disabled.
+	if config == nil {
+		return nil
+	}
 
-func InitOtel(config Config) error {
 	err := config.Init()
 	if err != nil {
 		return fmt.Errorf("initialize otel: %w", err)

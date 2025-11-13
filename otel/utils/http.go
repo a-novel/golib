@@ -1,12 +1,15 @@
 package utils
 
-import "net/http"
+import (
+	"net/http"
+)
 
 type CaptureHTTPResponseWriter struct {
 	http.ResponseWriter
 
-	status int
-	size   int64
+	status   int
+	size     int64
+	response []byte
 }
 
 func (w *CaptureHTTPResponseWriter) WriteHeader(statusCode int) {
@@ -21,6 +24,7 @@ func (w *CaptureHTTPResponseWriter) Write(b []byte) (int, error) {
 	}
 
 	w.size += int64(n)
+	w.response = append(w.response, b...)
 
 	return n, nil
 }
@@ -35,4 +39,8 @@ func (w *CaptureHTTPResponseWriter) Status() int {
 
 func (w *CaptureHTTPResponseWriter) Size() int64 {
 	return w.size
+}
+
+func (w *CaptureHTTPResponseWriter) Response() []byte {
+	return w.response
 }
