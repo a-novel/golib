@@ -50,3 +50,14 @@ func RunInTx(ctx context.Context, opts *sql.TxOptions, callback func(ctx context
 		return callback(ctx, tx)
 	})
 }
+
+// TransferContext transfers the current postgres context into another. If the source context is not a postgres
+// context, this is a no-op.
+func TransferContext(baseCtx, destCtx context.Context) context.Context {
+	db, ok := baseCtx.Value(ContextKey{}).(bun.IDB)
+	if !ok {
+		return destCtx
+	}
+
+	return context.WithValue(destCtx, ContextKey{}, db)
+}
