@@ -5,7 +5,7 @@
     {
       "matchManagers": ["gomod"],
       "postUpgradeTasks": {
-        "commands": ["go tool golangci-lint run ./... --fix"],
+        "commands": ["go tool golangci-lint run ./... --fix", "go generate ./..."],
         "executionMode": "branch"
       }
     }
