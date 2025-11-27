@@ -7,8 +7,8 @@ require (
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/propagator v0.54.0
 	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/fatih/color v1.18.0
-	github.com/getsentry/sentry-go v0.39.0
-	github.com/getsentry/sentry-go/otel v0.39.0
+	github.com/getsentry/sentry-go v0.40.0
+	github.com/getsentry/sentry-go/otel v0.40.0
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.3
 	github.com/samber/lo v1.52.0
 	github.com/stretchr/testify v1.11.1
