@@ -1,6 +1,6 @@
 {
   "name": "golib",
-  "version": "0.19.5",
+  "version": "0.19.6",
   "license": "AGPL-3.0",
   "type": "module",
   "scripts": {
