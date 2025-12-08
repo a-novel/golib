@@ -8,7 +8,7 @@ import (
 	"google.golang.org/grpc/health"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 
-	golibproto "github.com/a-novel/golib/grpcf/proto/gen"
+	golibproto "github.com/a-novel-kit/golib/grpcf/proto/gen"
 )
 
 type echo struct {

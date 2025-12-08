@@ -12,9 +12,9 @@ import (
 
 	"go.opentelemetry.io/otel/codes"
 
-	"github.com/a-novel/golib/logging"
-	libotel "github.com/a-novel/golib/otel"
-	"github.com/a-novel/golib/otel/utils"
+	"github.com/a-novel-kit/golib/logging"
+	libotel "github.com/a-novel-kit/golib/otel"
+	"github.com/a-novel-kit/golib/otel/utils"
 )
 
 var _ logging.HttpConfig = (*HttpGcloud)(nil)

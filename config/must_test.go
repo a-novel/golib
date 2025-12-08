@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/a-novel/golib/config"
+	"github.com/a-novel-kit/golib/config"
 )
 
 var errPanic = errors.New("panic")

@@ -10,8 +10,8 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 
-	"github.com/a-novel/golib/logging"
-	"github.com/a-novel/golib/otel/utils"
+	"github.com/a-novel-kit/golib/logging"
+	"github.com/a-novel-kit/golib/otel/utils"
 )
 
 var _ logging.HttpConfig = (*HttpLocal)(nil)

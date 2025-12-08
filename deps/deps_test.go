@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/a-novel/golib/deps"
+	"github.com/a-novel-kit/golib/deps"
 )
 
 func TestResolveDependants(t *testing.T) {

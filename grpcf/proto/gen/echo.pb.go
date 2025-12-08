@@ -399,7 +399,7 @@ const file_echo_proto_rawDesc = "" +
 	"\tUnaryEcho\x12\x11.UnaryEchoRequest\x1a\x12.UnaryEchoResponse\"\x00\x12T\n" +
 	"\x13ServerStreamingEcho\x12\x1b.ServerStreamingEchoRequest\x1a\x1c.ServerStreamingEchoResponse\"\x000\x01\x12T\n" +
 	"\x13ClientStreamingEcho\x12\x1b.ClientStreamingEchoRequest\x1a\x1c.ClientStreamingEchoResponse\"\x00(\x01\x12k\n" +
-	"\x1aBidirectionalStreamingEcho\x12\".BidirectionalStreamingEchoRequest\x1a#.BidirectionalStreamingEchoResponse\"\x00(\x010\x01BBB\tEchoProtoP\x01Z3github.com/a-novel/golib/grpcf/proto/gen;golibprotob\x06proto3"
+	"\x1aBidirectionalStreamingEcho\x12\".BidirectionalStreamingEchoRequest\x1a#.BidirectionalStreamingEchoResponse\"\x00(\x010\x01BFB\tEchoProtoP\x01Z7github.com/a-novel-kit/golib/grpcf/proto/gen;golibprotob\x06proto3"
 
 var (
 	file_echo_proto_rawDescOnce sync.Once

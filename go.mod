@@ -1,4 +1,4 @@
-module github.com/a-novel/golib
+module github.com/a-novel-kit/golib
 
 go 1.25.5
 

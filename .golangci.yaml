@@ -12,7 +12,6 @@ formatters:
         - default # Default section: contains all imports that could not be matched to another section type.
         - prefix(go.opentelemetry.io)
         - prefix(github.com/a-novel-kit)
-        - prefix(github.com/a-novel)
         - localmodule
 
 linters:

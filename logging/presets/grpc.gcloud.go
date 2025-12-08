@@ -8,7 +8,7 @@ import (
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
 	"google.golang.org/grpc"
 
-	"github.com/a-novel/golib/logging"
+	"github.com/a-novel-kit/golib/logging"
 )
 
 var _ logging.RpcConfig = (*GrpcGcloud)(nil)

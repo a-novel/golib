@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/a-novel/golib/grpcf"
+	"github.com/a-novel-kit/golib/grpcf"
 )
 
 func TestProtoAnyConversion(t *testing.T) {

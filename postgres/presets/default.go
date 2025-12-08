@@ -10,7 +10,7 @@ import (
 	"github.com/uptrace/bun/dialect/pgdialect"
 	"github.com/uptrace/bun/driver/pgdriver"
 
-	"github.com/a-novel/golib/postgres"
+	"github.com/a-novel-kit/golib/postgres"
 )
 
 const (
