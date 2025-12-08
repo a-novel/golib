@@ -1,7 +1,7 @@
 {
   "name": "golib",
   "version": "0.19.8",
-  "license": "AGPL-3.0",
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "format": "pnpm run format:prettier",
